@@ -1,10 +1,10 @@
 // This script converts .mss cartocss files into strings to be consumed by cartodb.js
 // run it from inside the scripts/ directory
-var fs = require('fs');
-var dir = '../map/mss/';
-var outFile = '../map/src/carto.js'
-var mssFiles;
-var cartoStrings = {};
+var fs = require('fs'),
+    dir = '../mss/',
+    outFile = '../js/app.cartocss.js',
+    mssFiles = [],
+    cartoStrings = {};
 
 /*
     Process:
@@ -31,6 +31,8 @@ function iterateFiles() {
 
       convertString(file, contents);
 
+      // console.log('iterateFiles index: ', i, '\n\n');
+
       if (i === mssFiles.length -1 ){
         writeJSON();
       }      
@@ -40,14 +42,19 @@ function iterateFiles() {
 }
 
 function convertString(file, data) {
-  file = file.replace('.mss','');
+  var key = file.replace('.mss','');
   var x = data.split('\n').join('').replace(/ /g,'').replace(/\t/g, '');
-  cartoStrings[file] = x  
+
+  // console.log('key: ', key, ' data: ', x, '\n\n');
+
+  cartoStrings[key] = x;
 }
 
 function writeJSON() {
   var data = JSON.stringify(cartoStrings);  
-  var js = "var app = app || {} \napp.cartocss = (function(){ \n  return " + data + ";\n})();";
+  var js = "var app = (function(parent){ \n" +  
+            "  //cartocss for styling the data layer from CartoDB \n\n" + 
+            "  parent.el.cartocss = " + data + ";\n\n  return parent;\n\n})(app || {});";
 
   fs.writeFile(outFile, js,  function(err){
     if (err) throw err;
