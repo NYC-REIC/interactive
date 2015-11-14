@@ -1,8 +1,8 @@
 # LANDSCAPES OF PROFIT :: Interactive
-An interactive data-viz of all properties that were bought and sold within a two year period in New York City from 2000-11-20 to 2015-05-19. The interactive calculates the total profit and a proposed "1% flip tax" for a given geographic area in NYC. You can learn more about the [methodology and rationale here](http://www.landscapesofprofit.com/).
+An interactive map / data-viz of all properties that were bought and sold within a two year period in New York City from 2000-11-20 to 2015-05-19. The interactive calculates the total profit and a proposed "1% flip tax" for a given geographic area in NYC. You can learn more about the [methodology and rationale here](http://www.landscapesofprofit.com/).
 
 ## Download the Data
-The data is currently hosted on CartoDB and can be [downloaded here]()
+The data is currently hosted on CartoDB and can be [downloaded here](https://chenrick.cartodb.com/tables/nyc_flips_pluto_150712/public)
 
 ## Dependencies
 - CartoDB, CartoDB.JS, SQL API
