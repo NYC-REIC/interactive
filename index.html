@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <!-- typekittens 
+    <script src="//use.typekit.net/toh6xtq.js"></script>
+    <script>try{Typekit.load({ async: true });}catch(e){}</script>
+    -->
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+    <!-- this should be generated from src/style.scss -->
+    <link rel="stylesheet" type="text/css" href="src/style.css">
+  </head>
+  <body>
+<!--     <div id="map-nav">
+      <li id="pull"><a href="#">Landscapes of Profit</a></li>
+    </div> -->
+      <div id="ui-info">
+        <div id="map-ui" >
+          <li id="about" class="nav">About</li>
+          <li id ="report">Full Report (PDF)</li>
+          <li>Ugh Social Media Widgets</li>
+        </div>
+        <div id="info"></div>
+      </div>
+    </div>
+
+    <div id="totals">
+        <h3>Total Profit</h3>
+        <p class="profit"></p>
+        <h3>Total Tax</h3>
+        <p class="tax"></p>
+    </div>
+    <!-- map -->
+
+    <!-- <div id='circle_ui'>
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+           <circle cx="100" cy="50" r="50" stroke="black" stroke-width="2" fill="none" />
+        </svg> 
+    </div> -->
+    <div id="map"></div>
+    <div id='bldg_info'></div>
+
+    <!-- the js libraries -->
+    <script type="text/javascript" src="src/lodash.custom.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+    <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
+    <!-- to do: we only need the distance module from turf -->
+    <script type="text/javascript" src="src/turf.min.js"></script>
+    
+    <!-- the app -->
+    <!-- to do: bundle these into one js file! -->
+    <script src="js/app.el.js"></script>
+    <script src="js/app.map.js"></script>
+    <script src="js/app.cartocss.js"></script>
+    <script src="js/app.circle.js"></script>
+    <script src="js/app.hash.js"></script>
+    <script src="js/app.events.js"></script>
+    <script src="js/app.init.js"></script>
+
+    <!-- this script starts the app after the DOM is loaded -->
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        app.init();
+      });
+    </script>
+  </body>
+</html>
