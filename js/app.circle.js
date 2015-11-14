@@ -49,15 +49,11 @@ var app = (function(parent, $, L, cartodb, turf) {
               "FROM " + el.taxLots + ") as a" 
             
             console.log(this.SQLqueryDL);
-            
-            // create the cartocss for the data layer update
-            // this should really live in app.cartocss...
-            el.cartocss = '#' + el.taxLots + "{line-opacity: 0; polygon-fill: blue; [within=true] { polygon-fill: red; }}";
 
             // update the data layer's cartocss
             el.dataLayer.set({
               sql : this.SQLqueryDL,
-              cartocss : el.cartocss
+              cartocss : el.cartocss["circle-query"]
             });
 
             // get the data for aggregation
