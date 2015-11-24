@@ -12,34 +12,29 @@
     <link rel="stylesheet" type="text/css" href="src/style.css">
   </head>
   <body>
-<!--     <div id="map-nav">
-      <li id="pull"><a href="#">Landscapes of Profit</a></li>
-    </div> -->
-      <div id="ui-info">
-        <div id="map-ui" >
-          <li id="about" class="nav">About</li>
-          <li id ="report">Full Report (PDF)</li>
-          <li>Ugh Social Media Widgets</li>
-        </div>
-        <div id="info"></div>
+    <div class="container">
+
+      <header class="ui">
+        <h1>How much would your 'hood have from a 1&#37; flip tax&#63;</h1>
+      </header>
+
+      <div class="totals ui">
+          <h3>Total Profit</h3>
+          <p class="profit"></p>
+          <h3>Total Tax</h3>
+          <p class="tax"></p>
       </div>
-    </div>
 
-    <div id="totals">
-        <h3>Total Profit</h3>
-        <p class="profit"></p>
-        <h3>Total Tax</h3>
-        <p class="tax"></p>
-    </div>
-    <!-- map -->
+      <!-- circle ui -->
+      <div class="circle ui"></div>
 
-    <!-- <div id='circle_ui'>
-        <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-           <circle cx="100" cy="50" r="50" stroke="black" stroke-width="2" fill="none" />
-        </svg> 
-    </div> -->
-    <div id="map"></div>
-    <div id='bldg_info'></div>
+      <!-- map -->
+      <div id="map" class="ui"></div>
+
+      <!-- histogram -->
+      <div class="graph ui"></div>
+
+    </div>
 
     <!-- the js libraries -->
     <script type="text/javascript" src="src/lodash.custom.min.js"></script>
@@ -61,7 +56,7 @@
 
     <!-- this script starts the app after the DOM is loaded -->
     <script type="text/javascript">
-      jQuery(document).ready(function($) {
+      jQuery(document).ready(function() {
         app.init();
       });
     </script>
