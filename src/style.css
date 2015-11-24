@@ -33,15 +33,21 @@ h1, h2, h3, h4, h5, p {
 
 
 header.ui {
-  top: 0;
+  top: 10px;
   left: 0;
   right: 0;
+  width: 840px;
   height: auto;
+  margin: 0 auto;
   padding: 10px;
   text-align: center;
-  border-left: none;
+/*  border-left: none;
   border-right: none;
-  border-top: none;
+  border-top: none;*/
+}
+
+header.ui h1 {
+  display: inline;
 }
 
 .totals {
@@ -68,7 +74,7 @@ header.ui {
 }
 
 #map {
-  top: 50px;
+  top: 0;
   left: 0;
   bottom: 100px;
   right: 0;
@@ -98,5 +104,12 @@ header.ui {
   border-left: none;
   border-right: none;
   border-bottom: none;
+}
+
+/* D3 histogram stuff */
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
 }
 
