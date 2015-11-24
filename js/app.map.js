@@ -11,7 +11,7 @@ var app = (function(parent, $, L, cartodb){
       var params = {
         center : [40.694631,-73.925028],
         minZoom : 9,
-        maxZoom : 18,
+        maxZoom : 17,
         zoom : 15, 
         zoomControl : false,
         infoControl: false,

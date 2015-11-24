@@ -16,7 +16,7 @@ var app = (function(parent, w, d, $, L, cartodb) {
     layerSource : null,
     cdbOptions : null,
     dataLayer : null,
-    queriedData: null,
+    dataStore: [],
     sum: null,
     tax: null,
     cartocss : null,

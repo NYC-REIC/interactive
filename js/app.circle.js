@@ -9,8 +9,29 @@ var app = (function(parent, $, L, cartodb, turf) {
       // find the map's bounding box and center point
       // make some points for turf.js to calculate distance with
       getCurCenterTop : function() {
+        // offset the center of the circle so it doesn't collide with the header
+        var curZoom = el.map.getZoom();
+        var offset = 0.001;
+
+        // to do: make a function calculation for this...
+        if (curZoom > 15 && curZoom < 17) {
+          offset = 0.0005;
+        } else if (curZoom >= 17) {
+          offset = 0.00025;
+        } else if (curZoom == 14) {
+          offset = 0.002;
+        } else if (curZoom == 13) {
+          offset = 0.004;
+        } else if (curZoom == 12) {
+          offset = 0.008;
+        } else if (curZoom < 12 && curZoom > 9) {
+          offset = 0.016;
+        }
+        
         el.bounds = el.map.getBounds();
-        el.center = el.map.getCenter();        
+        el.center = el.map.getCenter();
+        el.center.lat = el.center.lat - offset;
+        el.bounds._northEast.lat = el.bounds._northEast.lat - offset;
         el.topPoint = turf.point([el.center.lng, el.bounds._northEast.lat]);
         el.centerPoint = turf.point([el.center.lng, el.center.lat]);
       },
@@ -35,7 +56,8 @@ var app = (function(parent, $, L, cartodb, turf) {
         webMercatorCircle : function() {
           if (this.distance && this.center) {
             // SQL query for data aggergation
-            this.SQLquerySUM = "SELECT after_d_01 AS sale, (after_d_01 - before__01) AS profit " +
+            this.SQLquerySUM = "SELECT (after_d_01 * 0.01) AS tax, (after_d_01 - before__01) AS profit, " +
+              "council, after_doc_date as date " +
               "FROM nyc_flips_pluto_150712 WHERE ST_Within(" +
               "the_geom_webmercator, ST_Buffer(ST_Transform(ST_GeomFromText(" +
               "'Point(" + el.center.lng + ' ' + el.center.lat + ")',4326)," + "3857)," +
@@ -69,14 +91,17 @@ var app = (function(parent, $, L, cartodb, turf) {
 
         // helper function, uses lodash to do sum rows returned from CDB query
         crunchData : function(data) {
-            el.queriedData = data;
-            console.log(data);
-            el.sum = _.sum(el.queriedData.rows, function(obj) { return obj.profit; });
-            el.tax = _.sum(el.queriedData.rows, function(obj) { return obj.sale; }) * 0.01;
+            console.log('crunching data: ', data);
+
+            el.dataStore = data.rows.slice(); 
+            el.sum = _.sum(el.dataStore, function(obj) { return obj.profit; });
+            el.tax = _.sum(el.dataStore, function(obj) { return obj.tax; });
 
             // credit: http://stackoverflow.com/questions/17563677/convert-javascript-number-to-currency-format-but-without-or-any-currency-sym
             var profit = "$" + (el.sum.toFixed(2) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
             var tax = "$" + (el.tax.toFixed(2) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+
+            console.log('profit: ', profit, ' tax: ', tax);
 
             $('.profit').text(profit);
             $('.tax').text(tax);
