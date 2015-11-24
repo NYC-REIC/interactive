@@ -1,0 +1,32 @@
+{
+  "name": "lop interactive",
+  "homepage": "https://github.com/NYC-REIC/interactive",
+  "authors": [
+    "Chris Henrick <chrishenrick@gmail.com>"
+  ],
+  "description": "interactive data viz for lop",
+  "main": "index.html",
+  "moduleType": [],
+  "keywords": [
+    "data",
+    "viz",
+    "landscapes",
+    "of",
+    "profit"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "src/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4",
+    "cartodb.js": "~3.15.8",
+    "d3": "~3.5.9"
+  }
+}
