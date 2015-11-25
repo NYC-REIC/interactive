@@ -5,6 +5,8 @@ var app = (function(parent){
     app.splitHash();
     app.map.init();
     app.eventListeners();
+    app.circle.getCurCenterTop();
+    app.circle.makeBuffer();
   }
 
   return parent;
