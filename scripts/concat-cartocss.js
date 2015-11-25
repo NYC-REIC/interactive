@@ -4,7 +4,8 @@ var fs = require('fs'),
     dir = '../mss/',
     outFile = '../js/app.cartocss.js',
     mssFiles = [],
-    cartoStrings = {};
+    cartoStrings = {},
+    count = 0;
 
 /*
     Process:
@@ -31,11 +32,7 @@ function iterateFiles() {
 
       convertString(file, contents);
 
-      // console.log('iterateFiles index: ', i, '\n\n');
-
-      if (i === mssFiles.length -1 ){
-        writeJSON();
-      }      
+      // console.log('iterateFiles index: ', i, '\n\n');     
 
     });
   });
@@ -48,6 +45,15 @@ function convertString(file, data) {
   // console.log('key: ', key, ' data: ', x, '\n\n');
 
   cartoStrings[key] = x;
+
+  count += 1;
+
+  // console.log(key, '\n\n');
+  // console.log(x, '\n\n');
+
+  if (count === mssFiles.length){
+    writeJSON();
+  } 
 }
 
 function writeJSON() {

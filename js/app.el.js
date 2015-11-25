@@ -2,7 +2,7 @@ var app = (function(parent, w, d, $, L, cartodb) {
 
   // "el" is just an object we store our "miscelaneous" variables in so we can pass them between modules
   parent.el = {
-    baselayer : new L.StamenTileLayer("toner-lite"),
+    baselayer : null,
     sql : new cartodb.SQL({ user: 'chenrick' }),
     taxLots : "nyc_flips_pluto_150712",
     all_the_things : [],

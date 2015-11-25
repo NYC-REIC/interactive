@@ -38,6 +38,15 @@ var app = (function(parent, $, L, cartodb, turf) {
       
       // this object contains chainable functions for creating the circle, updating the cartocss & data aggregation
       bufferMaker : {
+
+        circleParams : {
+          color: "#000",
+          weight: 2,
+          fill: false,
+          clickable: false,
+          pointerEvents: null
+        },
+
         centerToTop : function (c,t) {
           this.center = c;
           this.distance = turf.distance(c,t,'kilometers') * 0.85;
@@ -47,7 +56,7 @@ var app = (function(parent, $, L, cartodb, turf) {
         bufferCenter : function () {
           if (this.distance && this.center) {
             this.buffer = turf.buffer(this.center, this.distance, 'kilometers');
-            this.circle = L.circle([el.center.lat, el.center.lng],(this.distance * 1000 * 0.9)) ;
+            this.circle = L.circle([el.center.lat, el.center.lng],(this.distance * 1000 * 0.9), this.circleParams) ;
           }
           return this;
         },
@@ -70,7 +79,7 @@ var app = (function(parent, $, L, cartodb, turf) {
               el.center.lng + ' ' + el.center.lat + ")', 4326), " + "3857)," + (this.distance * 1200) + ") as within " +
               "FROM " + el.taxLots + ") as a" 
             
-            console.log(this.SQLqueryDL);
+            // console.log(this.SQLqueryDL);
 
             // update the data layer's cartocss
             el.dataLayer.set({
