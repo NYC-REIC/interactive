@@ -98,51 +98,14 @@
     <script src="js/app.circle.js"></script>
     <script src="js/app.hash.js"></script>
     <script src="js/app.graph.js"></script>
+    <script src="js/app.ui.js"></script>
     <script src="js/app.events.js"></script>
     <script src="js/app.init.js"></script>
 
     <!-- this script starts the app after the DOM is loaded -->
     <script type="text/javascript">
       jQuery(document).ready(function() {
-        
         app.init();
-
-        // set the circular lettering & position of the profit & tax text
-        // code credit: https://css-tricks.com/set-text-on-a-circle/
-        function circleElems() {
-
-          var diameter = 435,
-              topOffSet = 20,
-              left = (window.innerWidth / 2) - (diameter / 2) + "px",
-              top = (window.innerHeight / 2) - (diameter / 2) - topOffSet + "px";
-          
-          // break up the letters
-          var $within = $('.within').lettering();
-          var $letters = $within.children();
-
-          $('.circle').css({
-            "top" : top,
-            "left" : left,
-            "display" : "block"
-          });
-
-          $.each($letters, function(i, el){
-            $(el).css({
-              '-webkit-transform' : 'rotate(' + (i * 3) + 'deg' + ')',
-              '-moz-transform'    : 'rotate(' + (i * 3) + 'deg' + ')',
-              '-ms-transform'     : 'rotate(' + (i * 3) + 'deg' + ')',
-              '-o-transform'      : 'rotate(' + (i * 3) + 'deg' + ')',
-              'transform'         : 'rotate(' + (i * 3) + 'deg' + ')'
-            });
-          });
-
-          $('.within').css("display", "block");
-        }
-
-        circleElems();
-
-        $(window).on('resize', circleElems);
-
       });
     </script>
   </body>

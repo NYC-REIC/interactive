@@ -29,7 +29,10 @@ var app = (function(parent) {
         app.circle.getCurCenterTop();
         app.circle.makeBuffer();
       }
-    })
+    });
+
+    // recalculate the position of the text over the circle
+    $(window).on('resize', app.circleElems);
   };
 
   return parent;

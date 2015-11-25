@@ -4,6 +4,7 @@ var app = (function(parent){
   parent.init = function() {
     app.splitHash();
     app.map.init();
+    app.circleElems();
     app.eventListeners();
     app.circle.getCurCenterTop();
     app.circle.makeBuffer();
