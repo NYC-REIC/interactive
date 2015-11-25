@@ -16,6 +16,7 @@ var app = (function(parent) {
       if (zoom > 10 ) {
         app.circle.getCurCenterTop();
         app.circle.queryCDB();
+        app.circle.makeBuffer();
       }
       
     });
@@ -23,13 +24,17 @@ var app = (function(parent) {
     // we redraw the circle whenever the map is panning
     // perhaps doing this with L.circle isn't the best way to go
     //  as it stops drawing the circle when currently drawn tiles run out...
-    el.map.on('move', function(){
-      var zoom = el.map.getZoom();
-      if (zoom >10) {
-        app.circle.getCurCenterTop();
-        app.circle.makeBuffer();
-      }
-    })
+    // el.map.on('move', function(){
+    //   var zoom = el.map.getZoom();
+    //   if (zoom >10) {
+    //     app.circle.getCurCenterTop();
+    //     app.circle.makeBuffer();
+    //   }
+    // });
+
+    // resize the non-map UI elements for the circle
+    $(window).on('resize', app.circleElems);
+
   };
 
   return parent;

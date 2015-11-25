@@ -4,8 +4,6 @@ var app = (function(parent,$){
 
   var el = parent.el;
 
-  console.log(el);
-
   parent.splitHash = function() {
     el.hashurl = el.url.split('#');
   }

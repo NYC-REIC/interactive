@@ -154,7 +154,7 @@ header.ui h1 {
   height: 435px;
   background: transparent;
   /*transform-origin: center center;*/
-  /*border: none;*/
+  border: 1px solid hsl(300, 50%, 50%);
   -webkit-border-radius: 50%;
   -moz-border-radius: 50%;
   border-radius: 50%;
@@ -204,6 +204,7 @@ header.ui h1 {
 .total-tax {
   text-align: center;
   position: relative;
+  border: 1px solid blue;
 }
 
 .total-flips h4, 

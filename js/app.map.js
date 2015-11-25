@@ -16,9 +16,9 @@ var app = (function(parent, $, L, cartodb){
         attributionControl: true
       };
 
-      el.baselayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',{
+      el.baselayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png',{
           attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
-          opacity: 0.6
+          opacity: 1
         });
       el.map = new L.Map('map', params);
       el.baselayer.addTo(el.map);

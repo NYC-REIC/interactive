@@ -24,7 +24,8 @@ var app = (function(parent, w, d, $, L, cartodb) {
     bounds : null,
     center : null,
     topPoint : null,
-    centerPoint : null
+    centerPoint : null,
+    circleRadius : null
   };
 
   return parent;
