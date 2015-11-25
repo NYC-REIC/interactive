@@ -80,25 +80,21 @@ ul.icons li {
 }
 
 ul.icons.social li:last-child {
-  margin-left: 10px;
+  /*margin-left: 10px;*/
 }
 
 .fa-stack-1x {
   color: #fff;
 }
 
-.icon-twitter, 
-.icon-facebook,
-.icon-home {
+.icon {
   margin: 0;
   padding: 0;
   color: #FF6BB5;
   transition: color 0.5s ease;
 }
 
-.icon-twitter:hover, 
-.icon-facebook:hover,
-.icon-home:hover {
+.icon:hover {
   color: #CE0059;
 }
 
@@ -218,11 +214,16 @@ header.ui h1 {
 }
 
 .total-flips {
-  top: 80px;
+  top: 50px;
+}
+
+.total-flips h3 {
+  width: 300px;
+  margin: 0 auto;
 }
 
 .total-tax {
-  top: 100px;
+  top: 80px;
 }
 
 h1.profit {
