@@ -18,9 +18,10 @@ var app = (function(parent, $, L, cartodb){
 
       el.baselayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',{
           attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
-          opacity: 0.6
+          opacity: 0.5
         });
       el.map = new L.Map('map', params);
+      el.hash = new L.Hash(el.map);
       el.baselayer.addTo(el.map);
       el.fgTest = L.featureGroup().addTo(el.map);
       app.map.getCartoDB(el.map);
