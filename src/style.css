@@ -84,13 +84,12 @@ ul.icons.social li:last-child {
 }
 
 .fa-stack-1x {
-  color: rgba(255,255,255,1);
+  color: #fff;
 }
 
 .icon-twitter, 
 .icon-facebook,
 .icon-home {
-  cursor: pointer;
   margin: 0;
   padding: 0;
   color: #FF6BB5;
@@ -223,7 +222,7 @@ header.ui h1 {
 }
 
 .total-tax {
-  top: 120px;
+  top: 100px;
 }
 
 h1.profit {
