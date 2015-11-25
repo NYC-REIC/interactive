@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">   
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="src/style.css">
     <!-- typekittens -->
     <script src="//use.typekit.net/toh6xtq.js"></script>
@@ -11,6 +12,19 @@
   </head>
   <body>
     <div class="container">
+
+      <nav class="navbar">
+        <ul class="icons">
+          <li>
+            <a href="http://landscapesofprofit.com">
+              <span class="fa-stack fa-lg icon-home">
+                <i class="fa fa-square fa-stack-2x"></i>
+                <i class="fa fa-home fa-stack-1x"></i>
+              </span>
+            </a>
+          </li>
+        </ul>
+      </nav>
 
       <header class="ui">
         <h1 class="text-shadow">How much money could a 1&#37; flip tax raise in NYC&#63;</h1>
@@ -44,6 +58,25 @@
       <!-- histogram -->
       <!-- <div class="graph ui"></div> -->
 
+      <div class="social-share">
+        <ul class="icons social">
+          <li>
+            <a href="#">
+              <span class="fa-stack fa-lg icon-twitter">
+                <i class="fa fa-square fa-stack-2x"></i>
+                <i class="fa fa-twitter fa-stack-1x"></i>
+              </span>
+            </a>
+          </li>
+            <a href="#">
+              <span class="fa-stack fa-lg icon-facebook">
+                <i class="fa fa-square fa-stack-2x"></i>
+                <i class="fa fa-facebook fa-stack-1x"></i>
+              </span>
+            </a>
+        </ul>
+      </div>
+
     </div>
 
     <!-- the js libraries -->
@@ -74,9 +107,10 @@
         
         app.init();
 
+        // set the circular lettering & position of the profit & tax text
+        // code credit: https://css-tricks.com/set-text-on-a-circle/
         function circleElems() {
-          // set the circular lettering & position of the profit & tax text
-          // code credit: https://css-tricks.com/set-text-on-a-circle/
+
           var diameter = 435,
               topOffSet = 20,
               left = (window.innerWidth / 2) - (diameter / 2) + "px",

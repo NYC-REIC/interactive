@@ -46,6 +46,64 @@ h1, h2, h3, h4, h5, p {
   padding: 0;
 }
 
+
+/* nav elements & social icons */
+
+nav {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 100;
+  margin: 0;
+  padding: 0;
+  height: 50px;
+}
+
+.social-share {
+  z-index: 100;
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  height: 50px;
+}
+
+ul.icons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.icons li {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+}
+
+ul.icons.social li:last-child {
+  margin-left: 10px;
+}
+
+.fa-stack-1x {
+  color: rgba(255,255,255,1);
+}
+
+.icon-twitter, 
+.icon-facebook,
+.icon-home {
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  color: #FF6BB5;
+  transition: color 0.5s ease;
+}
+
+.icon-twitter:hover, 
+.icon-facebook:hover,
+.icon-home:hover {
+  color: #CE0059;
+}
+
+/* UI boxes */
 .ui {
   z-index: 100;
   position: absolute;
@@ -73,6 +131,7 @@ header.ui {
 header.ui h1 {
   display: inline;
   color: #CE0059;
+  font-size: 2.2em;
 }
 
 #map {
@@ -180,6 +239,7 @@ h2.tax {
   font-size: 4.8em;
   left: -0.1em;
 }
+
 
 .graph {
   bottom: 0;
