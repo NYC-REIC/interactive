@@ -1,5 +1,5 @@
 # LANDSCAPES OF PROFIT :: Interactive
-An interactive map / data-viz of all properties that were bought and sold within a two year period in New York City from 2003-01-01 to 2015-05-19. This data was derived from an analysis of NYC's property transaction database, [ACRIS](http://a836-acris.nyc.gov/CP/) using [Docker For Data](https://github.com/talos/docker4data). The interactive calculates the total profit and a proposed "1% flip tax" for a given geographic area in NYC__*__. You can learn more about the [methodology and rationale here](http://www.landscapesofprofit.com/) and [view the working prototype here](http://www.landscapesofprofit.com/interactive/).
+An interactive map / data-viz of all properties that were bought and sold within a two year period in New York City from 2003-01-01 to 2015-05-19. This data was derived from an analysis of NYC's property transaction database, [ACRIS](http://a836-acris.nyc.gov/CP/), using [Docker For Data](https://github.com/talos/docker4data). The interactive calculates the total profit and a proposed "1% Flip Tax" for a given geographic area in NYC\*. You can learn more about the [methodology and rationale here](http://www.landscapesofprofit.com/) and [view the working prototype here](http://www.landscapesofprofit.com/interactive/).
 
 __*__ Staten Island's property transactions are not included in ACRIS.
 
@@ -10,7 +10,7 @@ The data is currently hosted on CartoDB and can be [downloaded here](https://che
 - CartoDB, CartoDB.JS, SQL API
 - Leaflet.JS
 - Leaflet Geocoder Plug-in
-- Turf.JS
+- D3.JS
 - Lodash 
 
 ## Updating the CartoCSS
