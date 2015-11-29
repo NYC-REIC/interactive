@@ -78,7 +78,12 @@ var app = (function(parent, $, L, cartodb) {
             this.SQLqueryDL = "SELECT a.after_d_01, a.before__01, a.cartodb_id, a.the_geom_webmercator, a.within " +
               "FROM ( SELECT *, ST_DWithin( the_geom_webmercator, ST_Transform( ST_GeomFromText( 'Point(" +
               el.center.lng + ' ' + el.center.lat + ")', 4326), " + "3857)," + (this.distance) + ") as within " +
-              "FROM " + el.taxLots + ") as a" 
+              "FROM " + el.taxLots + ") as a";
+            
+            this.SQLqueryHoods = "SELECT neighborhood FROM pediacities_hoods WHERE " +
+              "ST_Intersects(the_geom_webmercator, ST_Buffer(" +
+                "ST_Transform(ST_GeomFromText('Point(" + el.center.lng + ' ' + el.center.lat + ")', 4326),3857)," +
+                this.distance + "))";
             
             // console.log(this.SQLqueryDL);
 
@@ -91,10 +96,16 @@ var app = (function(parent, $, L, cartodb) {
             // get the data for aggregation
             el.sql.execute(this.SQLquerySUM)
               .done(function(data){
-                  app.circle.bufferMaker.crunchData(data);
-                  app.circleElems();
-                  this.data = data;
-                  return this;
+                app.circle.bufferMaker.crunchData(data);
+                app.circleElems();
+                this.data = data;
+                return this;
+              });
+
+            // grab the neighborhoods
+            el.sql.execute(this.SQLqueryHoods)
+              .done(function(data){
+                console.log('hoods: ', data);
               });
           }
           return this;
