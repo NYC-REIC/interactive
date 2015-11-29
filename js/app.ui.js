@@ -1,36 +1,48 @@
-var app = (function(parent, w, d, $) {
+var app = (function(parent, w, d, $, d3) {
   // handles UI calculations
 
   parent.circleElems = function() {
     // set the circular lettering & position of the profit & tax text
-    // code credit: https://css-tricks.com/set-text-on-a-circle/
 
     var diameter = 435,
         topOffSet = 20,
         left = (window.innerWidth / 2) - (diameter / 2) + "px",
         top = (window.innerHeight / 2) - (diameter / 2) - topOffSet + "px";
-    
-    // break up the "within this circle..." characters
-    var $within = $('.within').lettering();
-    var $letters = $within.children();
 
     $('.circle').css({
       "top" : top,
       "left" : left,
       "display" : "block"
     });
+    
+  }
 
-    $.each($letters, function(i, el){
-      $(el).css({
-        '-webkit-transform' : 'rotate(' + (i * 3) + 'deg' + ')',
-        '-moz-transform'    : 'rotate(' + (i * 3) + 'deg' + ')',
-        '-ms-transform'     : 'rotate(' + (i * 3) + 'deg' + ')',
-        '-o-transform'      : 'rotate(' + (i * 3) + 'deg' + ')',
-        'transform'         : 'rotate(' + (i * 3) + 'deg' + ')'
-      });
-    });
+  parent.curveText = function() {
+    // position the "within this circle..." text by appending it to L.circle
 
-    $('.within').css("display", "block");
+    // as the circle is rendered each time the map moves, remove previously drawn text
+    if (d3.selectAll('#curve-text')[0].length) {
+      d3.selectAll('#curve-text').remove();
+    }
+
+    var svg = d3.select('svg');
+    
+    svg.select('.leafletCircle').attr('id','curve');
+    
+    svg.append('text')
+      .attr('id', 'curve-text')
+      .append('textPath')
+      .attr('xlink:href', '#curve')
+      .text('Within this circle ...');
+
+    var textPath = d3.select('#curve'),
+        text = d3.select('#curve-text'),
+        pathLength = textPath.node().getTotalLength(),
+        textLength = text.node().getComputedTextLength(),
+        xoffset = ((pathLength / 4) * 3) + textLength;
+
+    text.attr('x', xoffset);
+    text.attr('dy', -10);
   }
 
   parent.calcUI = function() {
@@ -49,4 +61,4 @@ var app = (function(parent, w, d, $) {
 
   return parent;
 
-})(app || {}, window, document, jQuery);
+})(app || {}, window, document, jQuery, d3);

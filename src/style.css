@@ -156,46 +156,6 @@ header.ui h1 {
   border-radius: 50%;
 }
 
-.within {
-  display: none;
-  z-index: 100;
-  position: relative;
-  left: -150px;
-  top: -65px;
-  width: 400px;
-  border-radius: 50%;
-  text-transform: uppercase;
-  -webkit-transform: rotate(-65deg);
-  -moz-transform: rotate(-65deg);
-  -ms-transform: rotate(-65deg);
-  -o-transform: rotate(-65deg);
-  transform: rotate(-65deg);
-}
-
-.within span {
-  z-index: 100;
-  font-family: Monaco, MonoSpace;
-  font-size: 14px;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 1px;
-  height: 255px;
-  margin: 0;
-  padding: 0;
-  transform-origin: bottom center;
-  /*border-top: 1px solid red;*/
-}
-
-
-/*.stats {
-  z-index: 100;
-  background: transparent;
-  left: 25%;
-  top: 25%;
-}*/
-
 .total-flips,
 .total-tax {
   text-align: center;
@@ -240,6 +200,13 @@ h2.tax {
   left: -0.1em;
 }
 
+/* "within this circle..." */
+#curve-text {
+  font-size: 20px;
+  font-style: italic;
+  z-index: 100;
+  color: #000;
+}
 
 .graph {
   bottom: 0;

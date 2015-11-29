@@ -44,6 +44,7 @@ var app = (function(parent, $, L, cartodb, turf) {
           weight: 2,
           fill: false,
           clickable: false,
+          className: 'leafletCircle',
           pointerEvents: null
         },
 
