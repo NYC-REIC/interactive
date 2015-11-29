@@ -93,7 +93,6 @@ var app = (function(parent, $, L, cartodb) {
               .done(function(data){
                   app.circle.bufferMaker.crunchData(data);
                   app.circleElems();
-                  app.curveText();
                   this.data = data;
                   return this;
               });
