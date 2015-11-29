@@ -146,14 +146,7 @@ header.ui h1 {
   border: 0;
   top: 0;
   left: 0;
-  width: 435px;
-  height: 435px;
   background: transparent;
-  /*transform-origin: center center;*/
-  /*border: none;*/
-  -webkit-border-radius: 50%;
-  -moz-border-radius: 50%;
-  border-radius: 50%;
 }
 
 .total-flips,
@@ -174,30 +167,28 @@ header.ui h1 {
 }
 
 .total-flips {
-  top: 50px;
+  /*top: 50px;*/
 }
 
 .total-flips h3 {
-  width: 300px;
-  margin: 0 auto;
+  /*width: 300px;*/
+  /*margin: 0 auto;*/
 }
 
 .total-tax {
-  top: 80px;
+  /*top: 80px;*/
 }
 
 h1.profit {
   position: relative;
   color: #CE0059;
-  font-size: 5.5em;
-  left: -1em;
+  font-size: 7em;
 }
 
 h2.tax {
   position: relative;
   color: #FF6BB5;
-  font-size: 4.8em;
-  left: -0.1em;
+  font-size: 6em;
 }
 
 /* "within this circle..." */

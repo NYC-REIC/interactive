@@ -92,6 +92,8 @@ var app = (function(parent, $, L, cartodb) {
             el.sql.execute(this.SQLquerySUM)
               .done(function(data){
                   app.circle.bufferMaker.crunchData(data);
+                  app.circleElems();
+                  app.curveText();
                   this.data = data;
                   return this;
               });
@@ -108,8 +110,8 @@ var app = (function(parent, $, L, cartodb) {
             el.tax = _.sum(el.dataStore, function(obj) { return obj.tax; });
 
             // credit: http://stackoverflow.com/questions/17563677/convert-javascript-number-to-currency-format-but-without-or-any-currency-sym
-            var profit = "$" + (el.sum.toFixed(2) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
-            var tax = "$" + (el.tax.toFixed(2) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+            var profit = "$" + (Math.round(el.sum) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+            var tax = "$" + (Math.round(el.tax) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 
             console.log('profit: ', profit, ' tax: ', tax);
 

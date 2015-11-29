@@ -28,7 +28,6 @@ var app = (function(parent) {
       if (zoom >10) {
         app.circle.getCurCenterTop();
         app.circle.makeBuffer();
-        app.curveText();
       }
     });
 
