@@ -1,4 +1,4 @@
-var app = (function(parent, $, L, cartodb, turf) {
+var app = (function(parent, $, L, cartodb) {
     // the meat of the app. 
     // here we buffer the maps mid point and use that area to query the tax lot data in CartoDB.
 
@@ -32,8 +32,8 @@ var app = (function(parent, $, L, cartodb, turf) {
         el.center = el.map.getCenter();
         el.center.lat = el.center.lat - offset;
         el.bounds._northEast.lat = el.bounds._northEast.lat - offset;
-        el.topPoint = turf.point([el.center.lng, el.bounds._northEast.lat]);
-        el.centerPoint = turf.point([el.center.lng, el.center.lat]);
+        el.topPoint = L.latLng([el.bounds._northEast.lat, el.center.lng]);
+        el.centerPoint = L.latLng([el.center.lat,el.center.lng]);
       },
       
       // this object contains chainable functions for creating the circle, updating the cartocss & data aggregation
@@ -50,14 +50,14 @@ var app = (function(parent, $, L, cartodb, turf) {
 
         centerToTop : function (c,t) {
           this.center = c;
-          this.distance = turf.distance(c,t,'kilometers') * 0.85;
+          this.distance = c.distanceTo(t);
           return this;
         },
 
         bufferCenter : function () {
           if (this.distance && this.center) {
-            this.buffer = turf.buffer(this.center, this.distance, 'kilometers');
-            this.circle = L.circle([el.center.lat, el.center.lng],(this.distance * 1000 * 0.9), this.circleParams) ;
+            // this.buffer = turf.buffer(this.center, this.distance, 'kilometers');
+            this.circle = L.circle([el.center.lat, el.center.lng],(this.distance * 0.78), this.circleParams) ;
           }
           return this;
         },
@@ -71,13 +71,13 @@ var app = (function(parent, $, L, cartodb, turf) {
               "FROM nyc_flips_pluto_150712 WHERE ST_Within(" +
               "the_geom_webmercator, ST_Buffer(ST_Transform(ST_GeomFromText(" +
               "'Point(" + el.center.lng + ' ' + el.center.lat + ")',4326)," + "3857)," +
-              (this.distance * 1200) + "))";        
+              (this.distance) + "))";        
             
             // SQL query for data layer cartocss update
             // we create another column called "within" that gives the data a boolean value for being in or out of the circle
             this.SQLqueryDL = "SELECT a.after_d_01, a.before__01, a.cartodb_id, a.the_geom_webmercator, a.within " +
               "FROM ( SELECT *, ST_DWithin( the_geom_webmercator, ST_Transform( ST_GeomFromText( 'Point(" +
-              el.center.lng + ' ' + el.center.lat + ")', 4326), " + "3857)," + (this.distance * 1200) + ") as within " +
+              el.center.lng + ' ' + el.center.lat + ")', 4326), " + "3857)," + (this.distance) + ") as within " +
               "FROM " + el.taxLots + ") as a" 
             
             // console.log(this.SQLqueryDL);
@@ -119,7 +119,7 @@ var app = (function(parent, $, L, cartodb, turf) {
 
         // clear the current L.circle then draw the new one
         testBuffer : function () {
-          if (this.buffer) {
+          if (this.distance) {
             el.fgTest.clearLayers();
             el.fgTest.addLayer(this.circle);
           }
@@ -143,4 +143,4 @@ var app = (function(parent, $, L, cartodb, turf) {
 
     return parent;
 
-})(app || {}, jQuery, L, cartodb, turf);
+})(app || {}, jQuery, L, cartodb);

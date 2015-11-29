@@ -31,6 +31,7 @@ var app = (function(parent, w, d, $, d3) {
     
     svg.append('text')
       .attr('id', 'curve-text')
+      .attr('class', 'text-shadow')
       .append('textPath')
       .attr('xlink:href', '#curve')
       .text('Within this circle ...');
