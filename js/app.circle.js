@@ -80,8 +80,9 @@ var app = (function(parent, $, L, cartodb) {
               el.center.lng + ' ' + el.center.lat + ")', 4326), " + "3857)," + (this.distance) + ") as within " +
               "FROM " + el.taxLots + ") as a";
             
+            // SQL query for grabbing neighborhoods
             this.SQLqueryHoods = "SELECT neighborhood FROM pediacities_hoods WHERE " +
-              "ST_Intersects(the_geom_webmercator, ST_Buffer(" +
+              "ST_Within(the_geom_webmercator, ST_Buffer(" +
                 "ST_Transform(ST_GeomFromText('Point(" + el.center.lng + ' ' + el.center.lat + ")', 4326),3857)," +
                 this.distance + "))";
             
