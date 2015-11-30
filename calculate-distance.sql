@@ -1,4 +1,4 @@
--- postgis query to calculate distance instead of using Leaflet's distanceTo() function
+-- sample postgis query to calculate distance instead of using Leaflet's distanceTo() function
 SELECT 
   (after_d_01 * 0.01) AS tax, 
   (after_d_01 - before__01) AS profit, 
@@ -23,9 +23,9 @@ WHERE
     )
   );
 
--- grab neighborhoods within the circle, but only if 
--- the area of the two overlapping geometries is > 50%
--- this should return "Bushwick"
+-- Grab the names of neighborhood polygons intersecting with the circle, but only if 
+-- the area of a neighborhood's geometry is > 50% of its total
+-- this query should return "Bushwick"
 SELECT neighborhood 
 FROM pediacities_hoods,
   ST_Buffer(
