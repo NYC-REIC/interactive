@@ -25,7 +25,8 @@ WHERE
 
 -- Grab the names of neighborhood polygons intersecting with the circle, but only if 
 -- the area of a neighborhood's geometry is > 50% of its total
--- this query should return "Bushwick"
+-- this query should return "Bushwick", without the "AND" part of the query it will return
+-- Bedstuy, Buswick, Ridgewood, & Williamsburg.
 SELECT neighborhood 
 FROM pediacities_hoods,
   ST_Buffer(
