@@ -10,7 +10,7 @@ var app = (function(parent, $, L, cartodb){
         center : [40.694631,-73.925028],
         minZoom : 9,
         maxZoom : 17,
-        zoom : 15, 
+        zoom : 14, 
         zoomControl : false,
         infoControl: false,
         attributionControl: true
@@ -58,6 +58,35 @@ var app = (function(parent, $, L, cartodb){
               layer.setZIndex(10); // make sure the cartodb layer is on top
               el.dataLayer = layer.getSubLayer(0);
           });
+    },
+
+    props: {
+      zoom : null,
+      hoodRatio : function(zoom) {
+        // determine how much overlapp between the circle & neighborhood's polygon
+        // to write a neighborhood name to the UI
+        // hood names should only show up >= zoom 14
+        var ratio;
+        
+        switch (zoom) {
+          case 14:
+            ratio = 0.5;
+            break;
+          case 15:
+            ratio = 0.2;
+            break;
+          case 16:
+            ratio = 0.01;
+            break;
+          case 17:
+            ratio = 0.0001;
+            break;
+          default:
+            ratio = 1;
+        }
+
+        return ratio;
+      }
     }
   }
 

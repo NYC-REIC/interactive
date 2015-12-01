@@ -12,7 +12,7 @@ var app = (function(parent, w, d, $, d3) {
     var width = w.innerWidth,
         height = w.innerHeight,
         left = (width - cwidth)/2,
-        top = ctop + (cwidth/6);
+        top = ctop + (cwidth/7);
 
     $('.circle').css({
       "top" : top,

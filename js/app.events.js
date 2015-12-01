@@ -9,11 +9,9 @@ var app = (function(parent) {
     // only do the PostGIS query when the map has stopped panning or zooming
     // to prevent too many CDB SQL API requests from being made.
     el.map.on('moveend', function(){
-      console.log('map moved');
-      var zoom = el.map.getZoom();
-      console.log('map zoom level: ', zoom);
+      app.map.props.zoom = el.map.getZoom();
       
-      if (zoom > 10 ) {
+      if (app.map.props.zoom > 10 ) {
         app.circle.getCurCenterTop();
         app.circle.queryCDB();
       }

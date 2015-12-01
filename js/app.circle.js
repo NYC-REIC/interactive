@@ -82,12 +82,13 @@ var app = (function(parent, $, L, cartodb) {
               "FROM " + el.taxLots + ") as a";
             
             // SQL query for grabbing neighborhoods
-            this.SQLqueryHoods = "SELECT neighborhood FROM pediacities_hoods WHERE " +
-              "ST_Within(the_geom_webmercator, ST_Buffer(" +
-                "ST_Transform(ST_GeomFromText('Point({{lng}} {{lat}})', 4326),3857)," +
-                "{{distance}}))";
+            this.SQLqueryHoods = "SELECT neighborhood FROM pediacities_hoods, " + 
+              "ST_Buffer(ST_Transform(ST_GeomFromText('Point({{lng}} {{lat}})',4326),3857),{{distance}}) as buffer " +
+              "WHERE ST_Intersects(the_geom_webmercator, buffer) " +
+              "AND (ST_Area(ST_Intersection(the_geom_webmercator, buffer)) / " + 
+              "ST_Area(the_geom_webmercator)) >= {{ratio}}";
             
-            // console.log(this.SQLqueryDL);
+            console.log(this.SQLqueryHoods);
 
             // update the data layer's cartocss
             el.dataLayer.set({
@@ -112,10 +113,12 @@ var app = (function(parent, $, L, cartodb) {
             el.sql.execute(this.SQLqueryHoods,{
               lng: el.center.lng,
               lat: el.center.lat,
-              distance: this.distance
+              distance: this.distance,
+              ratio: app.map.props.hoodRatio(el.map.getZoom())
             })
               .done(function(data){
                 console.log('hoods: ', data);
+                app.circle.bufferMaker.writeHoods(data);
               });
           }
           return this;
@@ -137,6 +140,31 @@ var app = (function(parent, $, L, cartodb) {
 
             $('.profit').text(profit);
             $('.tax').text(tax);
+        },
+
+        // helper function to write neighborhoods to the map
+        writeHoods : function(data) {
+          var hoodNames = "For our communities in <br>";
+          el.hoods = data.rows.slice();
+
+          if (el.hoods.length) {
+
+            el.hoods.forEach(function(d,i,arr){
+              if (i === arr.length -1) {
+                hoodNames += d.neighborhood;
+              } else {
+                hoodNames += d.neighborhood + ", "  
+              }
+            });
+
+            $('h4.hoods').html(hoodNames);
+          
+          } else {
+
+            $('h4.hoods').html("");
+
+          }
+
         },
 
         // clear the current L.circle then draw the new one
