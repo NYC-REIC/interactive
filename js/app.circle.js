@@ -21,11 +21,11 @@ var app = (function(parent, $, L, cartodb) {
         } else if (curZoom == 14) {
           offset = 0.002;
         } else if (curZoom == 13) {
-          offset = 0.004;
+          offset = 0.0025;
         } else if (curZoom == 12) {
-          offset = 0.008;
+          offset = 0.003;
         } else if (curZoom < 12 && curZoom > 9) {
-          offset = 0.016;
+          offset = 0.0035;
         }
         
         el.bounds = el.map.getBounds();
@@ -144,7 +144,7 @@ var app = (function(parent, $, L, cartodb) {
 
         // helper function to write neighborhoods to the map
         writeHoods : function(data) {
-          var hoodNames = "For our communities in <br>";
+          var hoodNames = "";
           el.hoods = data.rows.slice();
 
           if (el.hoods.length) {
@@ -157,11 +157,13 @@ var app = (function(parent, $, L, cartodb) {
               }
             });
 
-            $('h4.hoods').html(hoodNames);
+            $('h4.hoods.list').html(hoodNames);
+            $('h4.hoods').css("display","block");
           
           } else {
 
-            $('h4.hoods').html("");
+            $('h4.hoods.list').html("");
+            $('h4.hoods').css("display","none");
 
           }
 

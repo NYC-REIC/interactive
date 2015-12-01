@@ -7,17 +7,19 @@ var app = (function(parent, w, d, $, d3) {
     var circle = d3.select('.leafletCircle'),
         ctop = circle.node().getBoundingClientRect().top,
         cleft = circle.node().getBoundingClientRect().left,
-        cwidth = circle.node().getBoundingClientRect().width;
+        cwidth = circle.node().getBoundingClientRect().width,
+        cheight = circle.node().getBoundingClientRect().height;
 
     var width = w.innerWidth,
         height = w.innerHeight,
         left = (width - cwidth)/2,
-        top = ctop + (cwidth/7);
+        top = ctop;
 
     $('.circle').css({
       "top" : top,
       "left" : left,
       "width" : cwidth,
+      "height" : cheight,
       "display" : "block"
     });
 

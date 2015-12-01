@@ -1,6 +1,7 @@
 /* Palette */
 /* red: #CE0059 */
 /* pink: #FF6BB5 */
+/* 30K: #B3B3B3; */
 
 html, body, .container {
   width: 100%;
@@ -90,12 +91,12 @@ ul.icons.social li:last-child {
 .icon {
   margin: 0;
   padding: 0;
-  color: #FF6BB5;
+  color: #B3B3B3;
   transition: color 0.5s ease;
 }
 
 .icon:hover {
-  color: #CE0059;
+  color: #808080;
 }
 
 /* UI boxes */
@@ -140,6 +141,7 @@ header.ui h1 {
   padding: 0;
 }
 
+/* not the svg but the div containing the profit & tax info */
 .circle {
   display: none;
   pointer-events: none;
@@ -153,6 +155,19 @@ header.ui h1 {
 .total-tax {
   text-align: center;
   position: relative;
+  margin-top: 6%;
+}
+
+h1.profit {
+  position: relative;
+  color: #CE0059;
+  font-size: 7em;
+}
+
+h2.tax {
+  position: relative;
+  color: #FF6BB5;
+  font-size: 6em;
 }
 
 .total-flips h4, 
@@ -171,24 +186,16 @@ header.ui h1 {
 }
 
 .total-flips h3 {
-  /*width: 300px;*/
-  /*margin: 0 auto;*/
+  width: 300px;
+  margin: 0 auto;
 }
 
 .total-tax {
   /*top: 80px;*/
 }
 
-h1.profit {
-  position: relative;
-  color: #CE0059;
-  font-size: 7em;
-}
-
-h2.tax {
-  position: relative;
-  color: #FF6BB5;
-  font-size: 6em;
+.hoods.list {
+  font-weight: normal;
 }
 
 /* "within this circle..." */
