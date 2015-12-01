@@ -62,16 +62,17 @@ var app = (function(parent, $, L, cartodb) {
           return this;
         },
 
-        // recreate the buffer in PostGIS for the spatial query in the CartoDB table / data layer
         webMercatorCircle : function() {
+          // spatially query the CartoDB data layer using PostGIS 
+          
           if (this.distance && this.center) {
             // SQL query for data aggergation
             this.SQLquerySUM = "SELECT (after_d_01 * 0.01) AS tax, (after_d_01 - before__01) AS profit, " +
               "council, after_doc_date as date " +
               "FROM nyc_flips_pluto_150712 WHERE ST_Within(" +
               "the_geom_webmercator, ST_Buffer(ST_Transform(ST_GeomFromText(" +
-              "'Point(" + el.center.lng + ' ' + el.center.lat + ")',4326)," + "3857)," +
-              (this.distance) + "))";        
+              "'Point({{lng}} {{lat}})',4326)," + "3857)," +
+              "{{distance}}))";        
             
             // SQL query for data layer cartocss update
             // we create another column called "within" that gives the data a boolean value for being in or out of the circle
@@ -83,8 +84,8 @@ var app = (function(parent, $, L, cartodb) {
             // SQL query for grabbing neighborhoods
             this.SQLqueryHoods = "SELECT neighborhood FROM pediacities_hoods WHERE " +
               "ST_Within(the_geom_webmercator, ST_Buffer(" +
-                "ST_Transform(ST_GeomFromText('Point(" + el.center.lng + ' ' + el.center.lat + ")', 4326),3857)," +
-                this.distance + "))";
+                "ST_Transform(ST_GeomFromText('Point({{lng}} {{lat}})', 4326),3857)," +
+                "{{distance}}))";
             
             // console.log(this.SQLqueryDL);
 
@@ -95,7 +96,11 @@ var app = (function(parent, $, L, cartodb) {
             });
 
             // get the data for aggregation
-            el.sql.execute(this.SQLquerySUM)
+            el.sql.execute(this.SQLquerySUM,{
+              lng: el.center.lng,
+              lat: el.center.lat,
+              distance: this.distance
+            })
               .done(function(data){
                 app.circle.bufferMaker.crunchData(data);
                 app.circleElems();
@@ -104,7 +109,11 @@ var app = (function(parent, $, L, cartodb) {
               });
 
             // grab the neighborhoods
-            el.sql.execute(this.SQLqueryHoods)
+            el.sql.execute(this.SQLqueryHoods,{
+              lng: el.center.lng,
+              lat: el.center.lat,
+              distance: this.distance
+            })
               .done(function(data){
                 console.log('hoods: ', data);
               });
