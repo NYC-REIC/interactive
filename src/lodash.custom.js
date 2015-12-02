@@ -1,7 +1,7 @@
 /**
  * @license
  * lodash 3.10.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash include="sum,pluck"`
+ * Build: `lodash include="uniq,sum,value,pluck"`
  * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -14,6 +14,33 @@
 
   /** Used as the semantic version number. */
   var VERSION = '3.10.1';
+
+  /** Used to compose bitmasks for wrapper metadata. */
+  var BIND_FLAG = 1,
+      BIND_KEY_FLAG = 2,
+      CURRY_BOUND_FLAG = 4,
+      CURRY_FLAG = 8,
+      CURRY_RIGHT_FLAG = 16,
+      PARTIAL_FLAG = 32,
+      PARTIAL_RIGHT_FLAG = 64,
+      ARY_FLAG = 128;
+
+  /** Used to detect when a function becomes hot. */
+  var HOT_COUNT = 150,
+      HOT_SPAN = 16;
+
+  /** Used as the size to enable large array optimizations. */
+  var LARGE_ARRAY_SIZE = 200;
+
+  /** Used to indicate the type of lazy iteratees. */
+  var LAZY_FILTER_FLAG = 1,
+      LAZY_MAP_FLAG = 2;
+
+  /** Used as the `TypeError` message for "Functions" methods. */
+  var FUNC_ERROR_TEXT = 'Expected a function';
+
+  /** Used as the internal argument placeholder. */
+  var PLACEHOLDER = '__lodash_placeholder__';
 
   /** `Object#toString` result references. */
   var argsTag = '[object Arguments]',
@@ -129,6 +156,30 @@
   /*--------------------------------------------------------------------------*/
 
   /**
+   * The base implementation of `_.indexOf` without support for binary searches.
+   *
+   * @private
+   * @param {Array} array The array to search.
+   * @param {*} value The value to search for.
+   * @param {number} fromIndex The index to search from.
+   * @returns {number} Returns the index of the matched value, else `-1`.
+   */
+  function baseIndexOf(array, value, fromIndex) {
+    if (value !== value) {
+      return indexOfNaN(array, fromIndex);
+    }
+    var index = fromIndex - 1,
+        length = array.length;
+
+    while (++index < length) {
+      if (array[index] === value) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  /**
    * Converts `value` to a string if it's not one. An empty string is returned
    * for `null` or `undefined` values.
    *
@@ -138,6 +189,28 @@
    */
   function baseToString(value) {
     return value == null ? '' : (value + '');
+  }
+
+  /**
+   * Gets the index at which the first occurrence of `NaN` is found in `array`.
+   *
+   * @private
+   * @param {Array} array The array to search.
+   * @param {number} fromIndex The index to search from.
+   * @param {boolean} [fromRight] Specify iterating from right to left.
+   * @returns {number} Returns the index of the matched `NaN`, else `-1`.
+   */
+  function indexOfNaN(array, fromIndex, fromRight) {
+    var length = array.length,
+        index = fromIndex + (fromRight ? 0 : -1);
+
+    while ((fromRight ? index-- : ++index < length)) {
+      var other = array[index];
+      if (other !== other) {
+        return index;
+      }
+    }
+    return -1;
   }
 
   /**
@@ -171,6 +244,58 @@
     return !!value && typeof value == 'object';
   }
 
+  /**
+   * Replaces all `placeholder` elements in `array` with an internal placeholder
+   * and returns an array of their indexes.
+   *
+   * @private
+   * @param {Array} array The array to modify.
+   * @param {*} placeholder The placeholder to replace.
+   * @returns {Array} Returns the new array of placeholder indexes.
+   */
+  function replaceHolders(array, placeholder) {
+    var index = -1,
+        length = array.length,
+        resIndex = -1,
+        result = [];
+
+    while (++index < length) {
+      if (array[index] === placeholder) {
+        array[index] = PLACEHOLDER;
+        result[++resIndex] = index;
+      }
+    }
+    return result;
+  }
+
+  /**
+   * An implementation of `_.uniq` optimized for sorted arrays without support
+   * for callback shorthands and `this` binding.
+   *
+   * @private
+   * @param {Array} array The array to inspect.
+   * @param {Function} [iteratee] The function invoked per iteration.
+   * @returns {Array} Returns the new duplicate free array.
+   */
+  function sortedUniq(array, iteratee) {
+    var seen,
+        index = -1,
+        length = array.length,
+        resIndex = -1,
+        result = [];
+
+    while (++index < length) {
+      var value = array[index],
+          computed = iteratee ? iteratee(value, index, array) : value;
+
+      if (!index || seen !== computed) {
+        seen = computed;
+        result[++resIndex] = value;
+      }
+    }
+    return result;
+  }
+
   /*--------------------------------------------------------------------------*/
 
   /** Used for native method references. */
@@ -200,18 +325,39 @@
   /** Native method references. */
   var ArrayBuffer = root.ArrayBuffer,
       propertyIsEnumerable = objectProto.propertyIsEnumerable,
+      Set = getNative(root, 'Set'),
       splice = arrayProto.splice,
-      Uint8Array = root.Uint8Array;
+      Uint8Array = root.Uint8Array,
+      WeakMap = getNative(root, 'WeakMap');
 
   /* Native method references for those with the same name as other `lodash` methods. */
-  var nativeIsArray = getNative(Array, 'isArray'),
-      nativeKeys = getNative(Object, 'keys');
+  var nativeCreate = getNative(Object, 'create'),
+      nativeFloor = Math.floor,
+      nativeIsArray = getNative(Array, 'isArray'),
+      nativeKeys = getNative(Object, 'keys'),
+      nativeMax = Math.max,
+      nativeMin = Math.min,
+      nativeNow = getNative(Date, 'now');
+
+  /** Used as references for `-Infinity` and `Infinity`. */
+  var POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
+
+  /** Used as references for the maximum length and index of an array. */
+  var MAX_ARRAY_LENGTH = 4294967295,
+      MAX_ARRAY_INDEX = MAX_ARRAY_LENGTH - 1,
+      HALF_MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH >>> 1;
 
   /**
    * Used as the [maximum length](http://ecma-international.org/ecma-262/6.0/#sec-number.max_safe_integer)
    * of an array-like value.
    */
   var MAX_SAFE_INTEGER = 9007199254740991;
+
+  /** Used to store function metadata. */
+  var metaMap = WeakMap && new WeakMap;
+
+  /** Used to lookup unminified function names. */
+  var realNames = {};
 
   /** Used to lookup a type array constructors by `toStringTag`. */
   var ctorByTag = {};
@@ -339,8 +485,39 @@
    * _.isArray(squares.value());
    * // => true
    */
-  function lodash() {
+  function lodash(value) {
+    if (isObjectLike(value) && !isArray(value) && !(value instanceof LazyWrapper)) {
+      if (value instanceof LodashWrapper) {
+        return value;
+      }
+      if (hasOwnProperty.call(value, '__chain__') && hasOwnProperty.call(value, '__wrapped__')) {
+        return wrapperClone(value);
+      }
+    }
+    return new LodashWrapper(value);
+  }
+
+  /**
+   * The function whose prototype all chaining wrappers inherit from.
+   *
+   * @private
+   */
+  function baseLodash() {
     // No operation performed.
+  }
+
+  /**
+   * The base constructor for creating `lodash` wrapper objects.
+   *
+   * @private
+   * @param {*} value The value to wrap.
+   * @param {boolean} [chainAll] Enable chaining for all wrapper methods.
+   * @param {Array} [actions=[]] Actions to peform to resolve the unwrapped value.
+   */
+  function LodashWrapper(value, chainAll, actions) {
+    this.__wrapped__ = value;
+    this.__actions__ = actions || [];
+    this.__chain__ = !!chainAll;
   }
 
   /**
@@ -424,6 +601,195 @@
   /*------------------------------------------------------------------------*/
 
   /**
+   * Creates a lazy wrapper object which wraps `value` to enable lazy evaluation.
+   *
+   * @private
+   * @param {*} value The value to wrap.
+   */
+  function LazyWrapper(value) {
+    this.__wrapped__ = value;
+    this.__actions__ = [];
+    this.__dir__ = 1;
+    this.__filtered__ = false;
+    this.__iteratees__ = [];
+    this.__takeCount__ = POSITIVE_INFINITY;
+    this.__views__ = [];
+  }
+
+  /**
+   * Creates a clone of the lazy wrapper object.
+   *
+   * @private
+   * @name clone
+   * @memberOf LazyWrapper
+   * @returns {Object} Returns the cloned `LazyWrapper` object.
+   */
+  function lazyClone() {
+    var result = new LazyWrapper(this.__wrapped__);
+    result.__actions__ = arrayCopy(this.__actions__);
+    result.__dir__ = this.__dir__;
+    result.__filtered__ = this.__filtered__;
+    result.__iteratees__ = arrayCopy(this.__iteratees__);
+    result.__takeCount__ = this.__takeCount__;
+    result.__views__ = arrayCopy(this.__views__);
+    return result;
+  }
+
+  /**
+   * Reverses the direction of lazy iteration.
+   *
+   * @private
+   * @name reverse
+   * @memberOf LazyWrapper
+   * @returns {Object} Returns the new reversed `LazyWrapper` object.
+   */
+  function lazyReverse() {
+    if (this.__filtered__) {
+      var result = new LazyWrapper(this);
+      result.__dir__ = -1;
+      result.__filtered__ = true;
+    } else {
+      result = this.clone();
+      result.__dir__ *= -1;
+    }
+    return result;
+  }
+
+  /**
+   * Extracts the unwrapped value from its lazy wrapper.
+   *
+   * @private
+   * @name value
+   * @memberOf LazyWrapper
+   * @returns {*} Returns the unwrapped value.
+   */
+  function lazyValue() {
+    var array = this.__wrapped__.value(),
+        dir = this.__dir__,
+        isArr = isArray(array),
+        isRight = dir < 0,
+        arrLength = isArr ? array.length : 0,
+        view = getView(0, arrLength, this.__views__),
+        start = view.start,
+        end = view.end,
+        length = end - start,
+        index = isRight ? end : (start - 1),
+        iteratees = this.__iteratees__,
+        iterLength = iteratees.length,
+        resIndex = 0,
+        takeCount = nativeMin(length, this.__takeCount__);
+
+    if (!isArr || arrLength < LARGE_ARRAY_SIZE || (arrLength == length && takeCount == length)) {
+      return baseWrapperValue(array, this.__actions__);
+    }
+    var result = [];
+
+    outer:
+    while (length-- && resIndex < takeCount) {
+      index += dir;
+
+      var iterIndex = -1,
+          value = array[index];
+
+      while (++iterIndex < iterLength) {
+        var data = iteratees[iterIndex],
+            iteratee = data.iteratee,
+            type = data.type,
+            computed = iteratee(value);
+
+        if (type == LAZY_MAP_FLAG) {
+          value = computed;
+        } else if (!computed) {
+          if (type == LAZY_FILTER_FLAG) {
+            continue outer;
+          } else {
+            break outer;
+          }
+        }
+      }
+      result[resIndex++] = value;
+    }
+    return result;
+  }
+
+  /*------------------------------------------------------------------------*/
+
+  /**
+   *
+   * Creates a cache object to store unique values.
+   *
+   * @private
+   * @param {Array} [values] The values to cache.
+   */
+  function SetCache(values) {
+    var length = values ? values.length : 0;
+
+    this.data = { 'hash': nativeCreate(null), 'set': new Set };
+    while (length--) {
+      this.push(values[length]);
+    }
+  }
+
+  /**
+   * Checks if `value` is in `cache` mimicking the return signature of
+   * `_.indexOf` by returning `0` if the value is found, else `-1`.
+   *
+   * @private
+   * @param {Object} cache The cache to search.
+   * @param {*} value The value to search for.
+   * @returns {number} Returns `0` if `value` is found, else `-1`.
+   */
+  function cacheIndexOf(cache, value) {
+    var data = cache.data,
+        result = (typeof value == 'string' || isObject(value)) ? data.set.has(value) : data.hash[value];
+
+    return result ? 0 : -1;
+  }
+
+  /**
+   * Adds `value` to the cache.
+   *
+   * @private
+   * @name push
+   * @memberOf SetCache
+   * @param {*} value The value to cache.
+   */
+  function cachePush(value) {
+    var data = this.data;
+    if (typeof value == 'string' || isObject(value)) {
+      data.set.add(value);
+    } else {
+      data.hash[value] = true;
+    }
+  }
+
+  /*------------------------------------------------------------------------*/
+
+  /**
+   * Creates a new array joining `array` with `other`.
+   *
+   * @private
+   * @param {Array} array The array to join.
+   * @param {Array} other The other array to join.
+   * @returns {Array} Returns the new concatenated array.
+   */
+  function arrayConcat(array, other) {
+    var index = -1,
+        length = array.length,
+        othIndex = -1,
+        othLength = other.length,
+        result = Array(length + othLength);
+
+    while (++index < length) {
+      result[index] = array[index];
+    }
+    while (++othIndex < othLength) {
+      result[index++] = other[othIndex];
+    }
+    return result;
+  }
+
+  /**
    * Copies the values of `source` to `array`.
    *
    * @private
@@ -481,6 +847,25 @@
       result[index] = iteratee(array[index], index, array);
     }
     return result;
+  }
+
+  /**
+   * Appends the elements of `values` to `array`.
+   *
+   * @private
+   * @param {Array} array The array to modify.
+   * @param {Array} values The values to append.
+   * @returns {Array} Returns `array`.
+   */
+  function arrayPush(array, values) {
+    var index = -1,
+        length = values.length,
+        offset = array.length;
+
+    while (++index < length) {
+      array[offset + index] = values[index];
+    }
+    return array;
   }
 
   /**
@@ -660,6 +1045,26 @@
   }
 
   /**
+   * The base implementation of `_.create` without support for assigning
+   * properties to the created object.
+   *
+   * @private
+   * @param {Object} prototype The object to inherit from.
+   * @returns {Object} Returns the new object.
+   */
+  var baseCreate = (function() {
+    function object() {}
+    return function(prototype) {
+      if (isObject(prototype)) {
+        object.prototype = prototype;
+        var result = new object;
+        object.prototype = undefined;
+      }
+      return result || {};
+    };
+  }());
+
+  /**
    * The base implementation of `_.forEach` without support for callback
    * shorthands and `this` binding.
    *
@@ -669,6 +1074,40 @@
    * @returns {Array|Object|string} Returns `collection`.
    */
   var baseEach = createBaseEach(baseForOwn);
+
+  /**
+   * The base implementation of `_.flatten` with added support for restricting
+   * flattening and specifying the start index.
+   *
+   * @private
+   * @param {Array} array The array to flatten.
+   * @param {boolean} [isDeep] Specify a deep flatten.
+   * @param {boolean} [isStrict] Restrict flattening to arrays-like objects.
+   * @param {Array} [result=[]] The initial result value.
+   * @returns {Array} Returns the new flattened array.
+   */
+  function baseFlatten(array, isDeep, isStrict, result) {
+    result || (result = []);
+
+    var index = -1,
+        length = array.length;
+
+    while (++index < length) {
+      var value = array[index];
+      if (isObjectLike(value) && isArrayLike(value) &&
+          (isStrict || isArray(value) || isArguments(value))) {
+        if (isDeep) {
+          // Recursively flatten arrays (susceptible to call stack limits).
+          baseFlatten(value, isDeep, isStrict, result);
+        } else {
+          arrayPush(result, value);
+        }
+      } else if (!isStrict) {
+        result[result.length] = value;
+      }
+    }
+    return result;
+  }
 
   /**
    * The base implementation of `baseForIn` and `baseForOwn` which iterates
@@ -695,6 +1134,30 @@
    */
   function baseForOwn(object, iteratee) {
     return baseFor(object, iteratee, keys);
+  }
+
+  /**
+   * The base implementation of `_.functions` which creates an array of
+   * `object` function property names filtered from those provided.
+   *
+   * @private
+   * @param {Object} object The object to inspect.
+   * @param {Array} props The property names to filter.
+   * @returns {Array} Returns the new array of filtered property names.
+   */
+  function baseFunctions(object, props) {
+    var index = -1,
+        length = props.length,
+        resIndex = -1,
+        result = [];
+
+    while (++index < length) {
+      var key = props[index];
+      if (isFunction(object[key])) {
+        result[++resIndex] = key;
+      }
+    }
+    return result;
   }
 
   /**
@@ -981,6 +1444,19 @@
   }
 
   /**
+   * The base implementation of `setData` without support for hot loop detection.
+   *
+   * @private
+   * @param {Function} func The function to associate metadata with.
+   * @param {*} data The metadata.
+   * @returns {Function} Returns `func`.
+   */
+  var baseSetData = !metaMap ? identity : function(func, data) {
+    metaMap.set(func, data);
+    return func;
+  };
+
+  /**
    * The base implementation of `_.slice` without an iteratee call guard.
    *
    * @private
@@ -1029,6 +1505,58 @@
   }
 
   /**
+   * The base implementation of `_.uniq` without support for callback shorthands
+   * and `this` binding.
+   *
+   * @private
+   * @param {Array} array The array to inspect.
+   * @param {Function} [iteratee] The function invoked per iteration.
+   * @returns {Array} Returns the new duplicate free array.
+   */
+  function baseUniq(array, iteratee) {
+    var index = -1,
+        indexOf = getIndexOf(),
+        length = array.length,
+        isCommon = indexOf === baseIndexOf,
+        isLarge = isCommon && length >= LARGE_ARRAY_SIZE,
+        seen = isLarge ? createCache() : null,
+        result = [];
+
+    if (seen) {
+      indexOf = cacheIndexOf;
+      isCommon = false;
+    } else {
+      isLarge = false;
+      seen = iteratee ? [] : result;
+    }
+    outer:
+    while (++index < length) {
+      var value = array[index],
+          computed = iteratee ? iteratee(value, index, array) : value;
+
+      if (isCommon && value === value) {
+        var seenIndex = seen.length;
+        while (seenIndex--) {
+          if (seen[seenIndex] === computed) {
+            continue outer;
+          }
+        }
+        if (iteratee) {
+          seen.push(computed);
+        }
+        result.push(value);
+      }
+      else if (indexOf(seen, computed, 0) < 0) {
+        if (iteratee || isLarge) {
+          seen.push(computed);
+        }
+        result.push(value);
+      }
+    }
+    return result;
+  }
+
+  /**
    * The base implementation of `_.values` and `_.valuesIn` which creates an
    * array of `object` property values corresponding to the property names
    * of `props`.
@@ -1047,6 +1575,110 @@
       result[index] = object[props[index]];
     }
     return result;
+  }
+
+  /**
+   * The base implementation of `wrapperValue` which returns the result of
+   * performing a sequence of actions on the unwrapped `value`, where each
+   * successive action is supplied the return value of the previous.
+   *
+   * @private
+   * @param {*} value The unwrapped value.
+   * @param {Array} actions Actions to peform to resolve the unwrapped value.
+   * @returns {*} Returns the resolved value.
+   */
+  function baseWrapperValue(value, actions) {
+    var result = value;
+    if (result instanceof LazyWrapper) {
+      result = result.value();
+    }
+    var index = -1,
+        length = actions.length;
+
+    while (++index < length) {
+      var action = actions[index];
+      result = action.func.apply(action.thisArg, arrayPush([result], action.args));
+    }
+    return result;
+  }
+
+  /**
+   * Performs a binary search of `array` to determine the index at which `value`
+   * should be inserted into `array` in order to maintain its sort order.
+   *
+   * @private
+   * @param {Array} array The sorted array to inspect.
+   * @param {*} value The value to evaluate.
+   * @param {boolean} [retHighest] Specify returning the highest qualified index.
+   * @returns {number} Returns the index at which `value` should be inserted
+   *  into `array`.
+   */
+  function binaryIndex(array, value, retHighest) {
+    var low = 0,
+        high = array ? array.length : low;
+
+    if (typeof value == 'number' && value === value && high <= HALF_MAX_ARRAY_LENGTH) {
+      while (low < high) {
+        var mid = (low + high) >>> 1,
+            computed = array[mid];
+
+        if ((retHighest ? (computed <= value) : (computed < value)) && computed !== null) {
+          low = mid + 1;
+        } else {
+          high = mid;
+        }
+      }
+      return high;
+    }
+    return binaryIndexBy(array, value, identity, retHighest);
+  }
+
+  /**
+   * This function is like `binaryIndex` except that it invokes `iteratee` for
+   * `value` and each element of `array` to compute their sort ranking. The
+   * iteratee is invoked with one argument; (value).
+   *
+   * @private
+   * @param {Array} array The sorted array to inspect.
+   * @param {*} value The value to evaluate.
+   * @param {Function} iteratee The function invoked per iteration.
+   * @param {boolean} [retHighest] Specify returning the highest qualified index.
+   * @returns {number} Returns the index at which `value` should be inserted
+   *  into `array`.
+   */
+  function binaryIndexBy(array, value, iteratee, retHighest) {
+    value = iteratee(value);
+
+    var low = 0,
+        high = array ? array.length : 0,
+        valIsNaN = value !== value,
+        valIsNull = value === null,
+        valIsUndef = value === undefined;
+
+    while (low < high) {
+      var mid = nativeFloor((low + high) / 2),
+          computed = iteratee(array[mid]),
+          isDef = computed !== undefined,
+          isReflexive = computed === computed;
+
+      if (valIsNaN) {
+        var setLow = isReflexive || retHighest;
+      } else if (valIsNull) {
+        setLow = isReflexive && isDef && (retHighest || computed != null);
+      } else if (valIsUndef) {
+        setLow = isReflexive && (retHighest || isDef);
+      } else if (computed == null) {
+        setLow = false;
+      } else {
+        setLow = retHighest ? (computed <= value) : (computed < value);
+      }
+      if (setLow) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    return nativeMin(high, MAX_ARRAY_INDEX);
   }
 
   /**
@@ -1101,6 +1733,68 @@
   }
 
   /**
+   * Creates an array that is the composition of partially applied arguments,
+   * placeholders, and provided arguments into a single array of arguments.
+   *
+   * @private
+   * @param {Array|Object} args The provided arguments.
+   * @param {Array} partials The arguments to prepend to those provided.
+   * @param {Array} holders The `partials` placeholder indexes.
+   * @returns {Array} Returns the new array of composed arguments.
+   */
+  function composeArgs(args, partials, holders) {
+    var holdersLength = holders.length,
+        argsIndex = -1,
+        argsLength = nativeMax(args.length - holdersLength, 0),
+        leftIndex = -1,
+        leftLength = partials.length,
+        result = Array(leftLength + argsLength);
+
+    while (++leftIndex < leftLength) {
+      result[leftIndex] = partials[leftIndex];
+    }
+    while (++argsIndex < holdersLength) {
+      result[holders[argsIndex]] = args[argsIndex];
+    }
+    while (argsLength--) {
+      result[leftIndex++] = args[argsIndex++];
+    }
+    return result;
+  }
+
+  /**
+   * This function is like `composeArgs` except that the arguments composition
+   * is tailored for `_.partialRight`.
+   *
+   * @private
+   * @param {Array|Object} args The provided arguments.
+   * @param {Array} partials The arguments to append to those provided.
+   * @param {Array} holders The `partials` placeholder indexes.
+   * @returns {Array} Returns the new array of composed arguments.
+   */
+  function composeArgsRight(args, partials, holders) {
+    var holdersIndex = -1,
+        holdersLength = holders.length,
+        argsIndex = -1,
+        argsLength = nativeMax(args.length - holdersLength, 0),
+        rightIndex = -1,
+        rightLength = partials.length,
+        result = Array(argsLength + rightLength);
+
+    while (++argsIndex < argsLength) {
+      result[argsIndex] = args[argsIndex];
+    }
+    var offset = argsIndex;
+    while (++rightIndex < rightLength) {
+      result[offset + rightIndex] = partials[rightIndex];
+    }
+    while (++holdersIndex < holdersLength) {
+      result[offset + holders[holdersIndex]] = args[argsIndex++];
+    }
+    return result;
+  }
+
+  /**
    * Creates a `baseEach` or `baseEachRight` function.
    *
    * @private
@@ -1148,6 +1842,138 @@
       }
       return object;
     };
+  }
+
+  /**
+   * Creates a `Set` cache object to optimize linear searches of large arrays.
+   *
+   * @private
+   * @param {Array} [values] The values to cache.
+   * @returns {null|Object} Returns the new cache object if `Set` is supported, else `null`.
+   */
+  function createCache(values) {
+    return (nativeCreate && Set) ? new SetCache(values) : null;
+  }
+
+  /**
+   * Creates a function that produces an instance of `Ctor` regardless of
+   * whether it was invoked as part of a `new` expression or by `call` or `apply`.
+   *
+   * @private
+   * @param {Function} Ctor The constructor to wrap.
+   * @returns {Function} Returns the new wrapped function.
+   */
+  function createCtorWrapper(Ctor) {
+    return function() {
+      // Use a `switch` statement to work with class constructors.
+      // See http://ecma-international.org/ecma-262/6.0/#sec-ecmascript-function-objects-call-thisargument-argumentslist
+      // for more details.
+      var args = arguments;
+      switch (args.length) {
+        case 0: return new Ctor;
+        case 1: return new Ctor(args[0]);
+        case 2: return new Ctor(args[0], args[1]);
+        case 3: return new Ctor(args[0], args[1], args[2]);
+        case 4: return new Ctor(args[0], args[1], args[2], args[3]);
+        case 5: return new Ctor(args[0], args[1], args[2], args[3], args[4]);
+        case 6: return new Ctor(args[0], args[1], args[2], args[3], args[4], args[5]);
+        case 7: return new Ctor(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+      }
+      var thisBinding = baseCreate(Ctor.prototype),
+          result = Ctor.apply(thisBinding, args);
+
+      // Mimic the constructor's `return` behavior.
+      // See https://es5.github.io/#x13.2.2 for more details.
+      return isObject(result) ? result : thisBinding;
+    };
+  }
+
+  /**
+   * Creates a function that wraps `func` and invokes it with optional `this`
+   * binding of, partial application, and currying.
+   *
+   * @private
+   * @param {Function|string} func The function or method name to reference.
+   * @param {number} bitmask The bitmask of flags. See `createWrapper` for more details.
+   * @param {*} [thisArg] The `this` binding of `func`.
+   * @param {Array} [partials] The arguments to prepend to those provided to the new function.
+   * @param {Array} [holders] The `partials` placeholder indexes.
+   * @param {Array} [partialsRight] The arguments to append to those provided to the new function.
+   * @param {Array} [holdersRight] The `partialsRight` placeholder indexes.
+   * @param {Array} [argPos] The argument positions of the new function.
+   * @param {number} [ary] The arity cap of `func`.
+   * @param {number} [arity] The arity of `func`.
+   * @returns {Function} Returns the new wrapped function.
+   */
+  function createHybridWrapper(func, bitmask, thisArg, partials, holders, partialsRight, holdersRight, argPos, ary, arity) {
+    var isAry = bitmask & ARY_FLAG,
+        isBind = bitmask & BIND_FLAG,
+        isBindKey = bitmask & BIND_KEY_FLAG,
+        isCurry = bitmask & CURRY_FLAG,
+        isCurryBound = bitmask & CURRY_BOUND_FLAG,
+        isCurryRight = bitmask & CURRY_RIGHT_FLAG,
+        Ctor = isBindKey ? undefined : createCtorWrapper(func);
+
+    function wrapper() {
+      // Avoid `arguments` object use disqualifying optimizations by
+      // converting it to an array before providing it to other functions.
+      var length = arguments.length,
+          index = length,
+          args = Array(length);
+
+      while (index--) {
+        args[index] = arguments[index];
+      }
+      if (partials) {
+        args = composeArgs(args, partials, holders);
+      }
+      if (partialsRight) {
+        args = composeArgsRight(args, partialsRight, holdersRight);
+      }
+      if (isCurry || isCurryRight) {
+        var placeholder = wrapper.placeholder,
+            argsHolders = replaceHolders(args, placeholder);
+
+        length -= argsHolders.length;
+        if (length < arity) {
+          var newArgPos = argPos ? arrayCopy(argPos) : undefined,
+              newArity = nativeMax(arity - length, 0),
+              newsHolders = isCurry ? argsHolders : undefined,
+              newHoldersRight = isCurry ? undefined : argsHolders,
+              newPartials = isCurry ? args : undefined,
+              newPartialsRight = isCurry ? undefined : args;
+
+          bitmask |= (isCurry ? PARTIAL_FLAG : PARTIAL_RIGHT_FLAG);
+          bitmask &= ~(isCurry ? PARTIAL_RIGHT_FLAG : PARTIAL_FLAG);
+
+          if (!isCurryBound) {
+            bitmask &= ~(BIND_FLAG | BIND_KEY_FLAG);
+          }
+          var newData = [func, bitmask, thisArg, newPartials, newsHolders, newPartialsRight, newHoldersRight, newArgPos, ary, newArity],
+              result = createHybridWrapper.apply(undefined, newData);
+
+          if (isLaziable(func)) {
+            setData(result, newData);
+          }
+          result.placeholder = placeholder;
+          return result;
+        }
+      }
+      var thisBinding = isBind ? thisArg : this,
+          fn = isBindKey ? thisBinding[func] : func;
+
+      if (argPos) {
+        args = reorder(args, argPos);
+      }
+      if (isAry && ary < args.length) {
+        args.length = ary;
+      }
+      if (this && this !== root && this instanceof wrapper) {
+        fn = Ctor || createCtorWrapper(func);
+      }
+      return fn.apply(thisBinding, args);
+    }
+    return wrapper;
   }
 
   /**
@@ -1311,6 +2137,54 @@
   }
 
   /**
+   * Gets metadata for `func`.
+   *
+   * @private
+   * @param {Function} func The function to query.
+   * @returns {*} Returns the metadata for `func`.
+   */
+  var getData = !metaMap ? noop : function(func) {
+    return metaMap.get(func);
+  };
+
+  /**
+   * Gets the name of `func`.
+   *
+   * @private
+   * @param {Function} func The function to query.
+   * @returns {string} Returns the function name.
+   */
+  function getFuncName(func) {
+    var result = (func.name + ''),
+        array = realNames[result],
+        length = array ? array.length : 0;
+
+    while (length--) {
+      var data = array[length],
+          otherFunc = data.func;
+      if (otherFunc == null || otherFunc == func) {
+        return data.name;
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Gets the appropriate "indexOf" function. If the `_.indexOf` method is
+   * customized this function returns the custom method, otherwise it returns
+   * the `baseIndexOf` function. If arguments are provided the chosen function
+   * is invoked with them and its result is returned.
+   *
+   * @private
+   * @returns {Function|number} Returns the chosen function or its result.
+   */
+  function getIndexOf(collection, target, fromIndex) {
+    var result = lodash.indexOf || indexOf;
+    result = result === indexOf ? baseIndexOf : result;
+    return collection ? result(collection, target, fromIndex) : result;
+  }
+
+  /**
    * Gets the "length" property value of `object`.
    *
    * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
@@ -1350,6 +2224,34 @@
   function getNative(object, key) {
     var value = object == null ? undefined : object[key];
     return isNative(value) ? value : undefined;
+  }
+
+  /**
+   * Gets the view, applying any `transforms` to the `start` and `end` positions.
+   *
+   * @private
+   * @param {number} start The start of the view.
+   * @param {number} end The end of the view.
+   * @param {Array} transforms The transformations to apply to the view.
+   * @returns {Object} Returns an object containing the `start` and `end`
+   *  positions of the view.
+   */
+  function getView(start, end, transforms) {
+    var index = -1,
+        length = transforms.length;
+
+    while (++index < length) {
+      var data = transforms[index],
+          size = data.size;
+
+      switch (data.type) {
+        case 'drop':      start += size; break;
+        case 'dropRight': end -= size; break;
+        case 'take':      end = nativeMin(end, start + size); break;
+        case 'takeRight': start = nativeMax(start, end - size); break;
+      }
+    }
+    return { 'start': start, 'end': end };
   }
 
   /**
@@ -1498,6 +2400,27 @@
   }
 
   /**
+   * Checks if `func` has a lazy counterpart.
+   *
+   * @private
+   * @param {Function} func The function to check.
+   * @returns {boolean} Returns `true` if `func` has a lazy counterpart, else `false`.
+   */
+  function isLaziable(func) {
+    var funcName = getFuncName(func),
+        other = lodash[funcName];
+
+    if (typeof other != 'function' || !(funcName in LazyWrapper.prototype)) {
+      return false;
+    }
+    if (func === other) {
+      return true;
+    }
+    var data = getData(other);
+    return !!data && func === data[0];
+  }
+
+  /**
    * Checks if `value` is a valid array-like length.
    *
    * **Note:** This function is based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
@@ -1521,6 +2444,61 @@
   function isStrictComparable(value) {
     return value === value && !isObject(value);
   }
+
+  /**
+   * Reorder `array` according to the specified indexes where the element at
+   * the first index is assigned as the first element, the element at
+   * the second index is assigned as the second element, and so on.
+   *
+   * @private
+   * @param {Array} array The array to reorder.
+   * @param {Array} indexes The arranged array indexes.
+   * @returns {Array} Returns `array`.
+   */
+  function reorder(array, indexes) {
+    var arrLength = array.length,
+        length = nativeMin(indexes.length, arrLength),
+        oldArray = arrayCopy(array);
+
+    while (length--) {
+      var index = indexes[length];
+      array[length] = isIndex(index, arrLength) ? oldArray[index] : undefined;
+    }
+    return array;
+  }
+
+  /**
+   * Sets metadata for `func`.
+   *
+   * **Note:** If this function becomes hot, i.e. is invoked a lot in a short
+   * period of time, it will trip its breaker and transition to an identity function
+   * to avoid garbage collection pauses in V8. See [V8 issue 2070](https://code.google.com/p/v8/issues/detail?id=2070)
+   * for more details.
+   *
+   * @private
+   * @param {Function} func The function to associate metadata with.
+   * @param {*} data The metadata.
+   * @returns {Function} Returns `func`.
+   */
+  var setData = (function() {
+    var count = 0,
+        lastCalled = 0;
+
+    return function(key, value) {
+      var stamp = now(),
+          remaining = HOT_SPAN - (stamp - lastCalled);
+
+      lastCalled = stamp;
+      if (remaining > 0) {
+        if (++count >= HOT_COUNT) {
+          return key;
+        }
+      } else {
+        count = 0;
+      }
+      return baseSetData(key, value);
+    };
+  }());
 
   /**
    * A fallback implementation of `Object.keys` which creates an array of the
@@ -1609,7 +2587,66 @@
     return result;
   }
 
+  /**
+   * Creates a clone of `wrapper`.
+   *
+   * @private
+   * @param {Object} wrapper The wrapper to clone.
+   * @returns {Object} Returns the cloned wrapper.
+   */
+  function wrapperClone(wrapper) {
+    return wrapper instanceof LazyWrapper
+      ? wrapper.clone()
+      : new LodashWrapper(wrapper.__wrapped__, wrapper.__chain__, arrayCopy(wrapper.__actions__));
+  }
+
   /*------------------------------------------------------------------------*/
+
+  /**
+   * Gets the index at which the first occurrence of `value` is found in `array`
+   * using [`SameValueZero`](http://ecma-international.org/ecma-262/6.0/#sec-samevaluezero)
+   * for equality comparisons. If `fromIndex` is negative, it's used as the offset
+   * from the end of `array`. If `array` is sorted providing `true` for `fromIndex`
+   * performs a faster binary search.
+   *
+   * @static
+   * @memberOf _
+   * @category Array
+   * @param {Array} array The array to search.
+   * @param {*} value The value to search for.
+   * @param {boolean|number} [fromIndex=0] The index to search from or `true`
+   *  to perform a binary search on a sorted array.
+   * @returns {number} Returns the index of the matched value, else `-1`.
+   * @example
+   *
+   * _.indexOf([1, 2, 1, 2], 2);
+   * // => 1
+   *
+   * // using `fromIndex`
+   * _.indexOf([1, 2, 1, 2], 2, 2);
+   * // => 3
+   *
+   * // performing a binary search
+   * _.indexOf([1, 1, 2, 2], 2, true);
+   * // => 2
+   */
+  function indexOf(array, value, fromIndex) {
+    var length = array ? array.length : 0;
+    if (!length) {
+      return -1;
+    }
+    if (typeof fromIndex == 'number') {
+      fromIndex = fromIndex < 0 ? nativeMax(length + fromIndex, 0) : fromIndex;
+    } else if (fromIndex) {
+      var index = binaryIndex(array, value);
+      if (index < length &&
+          (value === value ? (value === array[index]) : (array[index] !== array[index]))) {
+        return index;
+      }
+      return -1;
+    }
+    return baseIndexOf(array, value, fromIndex || 0);
+  }
 
   /**
    * Gets the last element of `array`.
@@ -1627,6 +2664,358 @@
   function last(array) {
     var length = array ? array.length : 0;
     return length ? array[length - 1] : undefined;
+  }
+
+  /**
+   * Creates a duplicate-free version of an array, using
+   * [`SameValueZero`](http://ecma-international.org/ecma-262/6.0/#sec-samevaluezero)
+   * for equality comparisons, in which only the first occurence of each element
+   * is kept. Providing `true` for `isSorted` performs a faster search algorithm
+   * for sorted arrays. If an iteratee function is provided it's invoked for
+   * each element in the array to generate the criterion by which uniqueness
+   * is computed. The `iteratee` is bound to `thisArg` and invoked with three
+   * arguments: (value, index, array).
+   *
+   * If a property name is provided for `iteratee` the created `_.property`
+   * style callback returns the property value of the given element.
+   *
+   * If a value is also provided for `thisArg` the created `_.matchesProperty`
+   * style callback returns `true` for elements that have a matching property
+   * value, else `false`.
+   *
+   * If an object is provided for `iteratee` the created `_.matches` style
+   * callback returns `true` for elements that have the properties of the given
+   * object, else `false`.
+   *
+   * @static
+   * @memberOf _
+   * @alias unique
+   * @category Array
+   * @param {Array} array The array to inspect.
+   * @param {boolean} [isSorted] Specify the array is sorted.
+   * @param {Function|Object|string} [iteratee] The function invoked per iteration.
+   * @param {*} [thisArg] The `this` binding of `iteratee`.
+   * @returns {Array} Returns the new duplicate-value-free array.
+   * @example
+   *
+   * _.uniq([2, 1, 2]);
+   * // => [2, 1]
+   *
+   * // using `isSorted`
+   * _.uniq([1, 1, 2], true);
+   * // => [1, 2]
+   *
+   * // using an iteratee function
+   * _.uniq([1, 2.5, 1.5, 2], function(n) {
+   *   return this.floor(n);
+   * }, Math);
+   * // => [1, 2.5]
+   *
+   * // using the `_.property` callback shorthand
+   * _.uniq([{ 'x': 1 }, { 'x': 2 }, { 'x': 1 }], 'x');
+   * // => [{ 'x': 1 }, { 'x': 2 }]
+   */
+  function uniq(array, isSorted, iteratee, thisArg) {
+    var length = array ? array.length : 0;
+    if (!length) {
+      return [];
+    }
+    if (isSorted != null && typeof isSorted != 'boolean') {
+      thisArg = iteratee;
+      iteratee = isIterateeCall(array, isSorted, thisArg) ? undefined : isSorted;
+      isSorted = false;
+    }
+    var callback = getCallback();
+    if (!(iteratee == null && callback === baseCallback)) {
+      iteratee = callback(iteratee, thisArg, 3);
+    }
+    return (isSorted && getIndexOf() === baseIndexOf)
+      ? sortedUniq(array, iteratee)
+      : baseUniq(array, iteratee);
+  }
+
+  /*------------------------------------------------------------------------*/
+
+  /**
+   * Creates a `lodash` object that wraps `value` with explicit method
+   * chaining enabled.
+   *
+   * @static
+   * @memberOf _
+   * @category Chain
+   * @param {*} value The value to wrap.
+   * @returns {Object} Returns the new `lodash` wrapper instance.
+   * @example
+   *
+   * var users = [
+   *   { 'user': 'barney',  'age': 36 },
+   *   { 'user': 'fred',    'age': 40 },
+   *   { 'user': 'pebbles', 'age': 1 }
+   * ];
+   *
+   * var youngest = _.chain(users)
+   *   .sortBy('age')
+   *   .map(function(chr) {
+   *     return chr.user + ' is ' + chr.age;
+   *   })
+   *   .first()
+   *   .value();
+   * // => 'pebbles is 1'
+   */
+  function chain(value) {
+    var result = lodash(value);
+    result.__chain__ = true;
+    return result;
+  }
+
+  /**
+   * This method invokes `interceptor` and returns `value`. The interceptor is
+   * bound to `thisArg` and invoked with one argument; (value). The purpose of
+   * this method is to "tap into" a method chain in order to perform operations
+   * on intermediate results within the chain.
+   *
+   * @static
+   * @memberOf _
+   * @category Chain
+   * @param {*} value The value to provide to `interceptor`.
+   * @param {Function} interceptor The function to invoke.
+   * @param {*} [thisArg] The `this` binding of `interceptor`.
+   * @returns {*} Returns `value`.
+   * @example
+   *
+   * _([1, 2, 3])
+   *  .tap(function(array) {
+   *    array.pop();
+   *  })
+   *  .reverse()
+   *  .value();
+   * // => [2, 1]
+   */
+  function tap(value, interceptor, thisArg) {
+    interceptor.call(thisArg, value);
+    return value;
+  }
+
+  /**
+   * This method is like `_.tap` except that it returns the result of `interceptor`.
+   *
+   * @static
+   * @memberOf _
+   * @category Chain
+   * @param {*} value The value to provide to `interceptor`.
+   * @param {Function} interceptor The function to invoke.
+   * @param {*} [thisArg] The `this` binding of `interceptor`.
+   * @returns {*} Returns the result of `interceptor`.
+   * @example
+   *
+   * _('  abc  ')
+   *  .chain()
+   *  .trim()
+   *  .thru(function(value) {
+   *    return [value];
+   *  })
+   *  .value();
+   * // => ['abc']
+   */
+  function thru(value, interceptor, thisArg) {
+    return interceptor.call(thisArg, value);
+  }
+
+  /**
+   * Enables explicit method chaining on the wrapper object.
+   *
+   * @name chain
+   * @memberOf _
+   * @category Chain
+   * @returns {Object} Returns the new `lodash` wrapper instance.
+   * @example
+   *
+   * var users = [
+   *   { 'user': 'barney', 'age': 36 },
+   *   { 'user': 'fred',   'age': 40 }
+   * ];
+   *
+   * // without explicit chaining
+   * _(users).first();
+   * // => { 'user': 'barney', 'age': 36 }
+   *
+   * // with explicit chaining
+   * _(users).chain()
+   *   .first()
+   *   .pick('user')
+   *   .value();
+   * // => { 'user': 'barney' }
+   */
+  function wrapperChain() {
+    return chain(this);
+  }
+
+  /**
+   * Executes the chained sequence and returns the wrapped result.
+   *
+   * @name commit
+   * @memberOf _
+   * @category Chain
+   * @returns {Object} Returns the new `lodash` wrapper instance.
+   * @example
+   *
+   * var array = [1, 2];
+   * var wrapped = _(array).push(3);
+   *
+   * console.log(array);
+   * // => [1, 2]
+   *
+   * wrapped = wrapped.commit();
+   * console.log(array);
+   * // => [1, 2, 3]
+   *
+   * wrapped.last();
+   * // => 3
+   *
+   * console.log(array);
+   * // => [1, 2, 3]
+   */
+  function wrapperCommit() {
+    return new LodashWrapper(this.value(), this.__chain__);
+  }
+
+  /**
+   * Creates a new array joining a wrapped array with any additional arrays
+   * and/or values.
+   *
+   * @name concat
+   * @memberOf _
+   * @category Chain
+   * @param {...*} [values] The values to concatenate.
+   * @returns {Array} Returns the new concatenated array.
+   * @example
+   *
+   * var array = [1];
+   * var wrapped = _(array).concat(2, [3], [[4]]);
+   *
+   * console.log(wrapped.value());
+   * // => [1, 2, 3, [4]]
+   *
+   * console.log(array);
+   * // => [1]
+   */
+  var wrapperConcat = restParam(function(values) {
+    values = baseFlatten(values);
+    return this.thru(function(array) {
+      return arrayConcat(isArray(array) ? array : [toObject(array)], values);
+    });
+  });
+
+  /**
+   * Creates a clone of the chained sequence planting `value` as the wrapped value.
+   *
+   * @name plant
+   * @memberOf _
+   * @category Chain
+   * @returns {Object} Returns the new `lodash` wrapper instance.
+   * @example
+   *
+   * var array = [1, 2];
+   * var wrapped = _(array).map(function(value) {
+   *   return Math.pow(value, 2);
+   * });
+   *
+   * var other = [3, 4];
+   * var otherWrapped = wrapped.plant(other);
+   *
+   * otherWrapped.value();
+   * // => [9, 16]
+   *
+   * wrapped.value();
+   * // => [1, 4]
+   */
+  function wrapperPlant(value) {
+    var result,
+        parent = this;
+
+    while (parent instanceof baseLodash) {
+      var clone = wrapperClone(parent);
+      if (result) {
+        previous.__wrapped__ = clone;
+      } else {
+        result = clone;
+      }
+      var previous = clone;
+      parent = parent.__wrapped__;
+    }
+    previous.__wrapped__ = value;
+    return result;
+  }
+
+  /**
+   * Reverses the wrapped array so the first element becomes the last, the
+   * second element becomes the second to last, and so on.
+   *
+   * **Note:** This method mutates the wrapped array.
+   *
+   * @name reverse
+   * @memberOf _
+   * @category Chain
+   * @returns {Object} Returns the new reversed `lodash` wrapper instance.
+   * @example
+   *
+   * var array = [1, 2, 3];
+   *
+   * _(array).reverse().value()
+   * // => [3, 2, 1]
+   *
+   * console.log(array);
+   * // => [3, 2, 1]
+   */
+  function wrapperReverse() {
+    var value = this.__wrapped__;
+
+    var interceptor = function(value) {
+      return value.reverse();
+    };
+    if (value instanceof LazyWrapper) {
+      var wrapped = value;
+      if (this.__actions__.length) {
+        wrapped = new LazyWrapper(this);
+      }
+      wrapped = wrapped.reverse();
+      wrapped.__actions__.push({ 'func': thru, 'args': [interceptor], 'thisArg': undefined });
+      return new LodashWrapper(wrapped, this.__chain__);
+    }
+    return this.thru(interceptor);
+  }
+
+  /**
+   * Produces the result of coercing the unwrapped value to a string.
+   *
+   * @name toString
+   * @memberOf _
+   * @category Chain
+   * @returns {string} Returns the coerced string value.
+   * @example
+   *
+   * _([1, 2, 3]).toString();
+   * // => '1,2,3'
+   */
+  function wrapperToString() {
+    return (this.value() + '');
+  }
+
+  /**
+   * Executes the chained sequence to extract the unwrapped value.
+   *
+   * @name value
+   * @memberOf _
+   * @alias run, toJSON, valueOf
+   * @category Chain
+   * @returns {*} Returns the resolved unwrapped value.
+   * @example
+   *
+   * _([1, 2, 3]).value();
+   * // => [1, 2, 3]
+   */
+  function wrapperValue() {
+    return baseWrapperValue(this.__wrapped__, this.__actions__);
   }
 
   /*------------------------------------------------------------------------*/
@@ -1718,6 +3107,79 @@
    */
   function pluck(collection, path) {
     return map(collection, property(path));
+  }
+
+  /*------------------------------------------------------------------------*/
+
+  /**
+   * Gets the number of milliseconds that have elapsed since the Unix epoch
+   * (1 January 1970 00:00:00 UTC).
+   *
+   * @static
+   * @memberOf _
+   * @category Date
+   * @example
+   *
+   * _.defer(function(stamp) {
+   *   console.log(_.now() - stamp);
+   * }, _.now());
+   * // => logs the number of milliseconds it took for the deferred function to be invoked
+   */
+  var now = nativeNow || function() {
+    return new Date().getTime();
+  };
+
+  /*------------------------------------------------------------------------*/
+
+  /**
+   * Creates a function that invokes `func` with the `this` binding of the
+   * created function and arguments from `start` and beyond provided as an array.
+   *
+   * **Note:** This method is based on the [rest parameter](https://developer.mozilla.org/Web/JavaScript/Reference/Functions/rest_parameters).
+   *
+   * @static
+   * @memberOf _
+   * @category Function
+   * @param {Function} func The function to apply a rest parameter to.
+   * @param {number} [start=func.length-1] The start position of the rest parameter.
+   * @returns {Function} Returns the new function.
+   * @example
+   *
+   * var say = _.restParam(function(what, names) {
+   *   return what + ' ' + _.initial(names).join(', ') +
+   *     (_.size(names) > 1 ? ', & ' : '') + _.last(names);
+   * });
+   *
+   * say('hello', 'fred', 'barney', 'pebbles');
+   * // => 'hello fred, barney, & pebbles'
+   */
+  function restParam(func, start) {
+    if (typeof func != 'function') {
+      throw new TypeError(FUNC_ERROR_TEXT);
+    }
+    start = nativeMax(start === undefined ? (func.length - 1) : (+start || 0), 0);
+    return function() {
+      var args = arguments,
+          index = -1,
+          length = nativeMax(args.length - start, 0),
+          rest = Array(length);
+
+      while (++index < length) {
+        rest[index] = args[start + index];
+      }
+      switch (start) {
+        case 0: return func.call(this, rest);
+        case 1: return func.call(this, args[0], rest);
+        case 2: return func.call(this, args[0], args[1], rest);
+      }
+      var otherArgs = Array(start + 1);
+      index = -1;
+      while (++index < start) {
+        otherArgs[index] = args[index];
+      }
+      otherArgs[start] = rest;
+      return func.apply(this, otherArgs);
+    };
   }
 
   /*------------------------------------------------------------------------*/
@@ -2152,6 +3614,111 @@
   }
 
   /**
+   * Adds all own enumerable function properties of a source object to the
+   * destination object. If `object` is a function then methods are added to
+   * its prototype as well.
+   *
+   * **Note:** Use `_.runInContext` to create a pristine `lodash` function to
+   * avoid conflicts caused by modifying the original.
+   *
+   * @static
+   * @memberOf _
+   * @category Utility
+   * @param {Function|Object} [object=lodash] The destination object.
+   * @param {Object} source The object of functions to add.
+   * @param {Object} [options] The options object.
+   * @param {boolean} [options.chain=true] Specify whether the functions added
+   *  are chainable.
+   * @returns {Function|Object} Returns `object`.
+   * @example
+   *
+   * function vowels(string) {
+   *   return _.filter(string, function(v) {
+   *     return /[aeiou]/i.test(v);
+   *   });
+   * }
+   *
+   * _.mixin({ 'vowels': vowels });
+   * _.vowels('fred');
+   * // => ['e']
+   *
+   * _('fred').vowels().value();
+   * // => ['e']
+   *
+   * _.mixin({ 'vowels': vowels }, { 'chain': false });
+   * _('fred').vowels();
+   * // => ['e']
+   */
+  function mixin(object, source, options) {
+    if (options == null) {
+      var isObj = isObject(source),
+          props = isObj ? keys(source) : undefined,
+          methodNames = (props && props.length) ? baseFunctions(source, props) : undefined;
+
+      if (!(methodNames ? methodNames.length : isObj)) {
+        methodNames = false;
+        options = source;
+        source = object;
+        object = this;
+      }
+    }
+    if (!methodNames) {
+      methodNames = baseFunctions(source, keys(source));
+    }
+    var chain = true,
+        index = -1,
+        isFunc = isFunction(object),
+        length = methodNames.length;
+
+    if (options === false) {
+      chain = false;
+    } else if (isObject(options) && 'chain' in options) {
+      chain = options.chain;
+    }
+    while (++index < length) {
+      var methodName = methodNames[index],
+          func = source[methodName];
+
+      object[methodName] = func;
+      if (isFunc) {
+        object.prototype[methodName] = (function(func) {
+          return function() {
+            var chainAll = this.__chain__;
+            if (chain || chainAll) {
+              var result = object(this.__wrapped__),
+                  actions = result.__actions__ = arrayCopy(this.__actions__);
+
+              actions.push({ 'func': func, 'args': arguments, 'thisArg': object });
+              result.__chain__ = chainAll;
+              return result;
+            }
+            return func.apply(object, arrayPush([this.value()], arguments));
+          };
+        }(func));
+      }
+    }
+    return object;
+  }
+
+  /**
+   * A no-operation function that returns `undefined` regardless of the
+   * arguments it receives.
+   *
+   * @static
+   * @memberOf _
+   * @category Utility
+   * @example
+   *
+   * var object = { 'user': 'fred' };
+   *
+   * _.noop(object) === undefined;
+   * // => true
+   */
+  function noop() {
+    // No operation performed.
+  }
+
+  /**
    * Creates a function that returns the property value at `path` on a
    * given object.
    *
@@ -2223,25 +3790,48 @@
 
   /*------------------------------------------------------------------------*/
 
+  // Ensure wrappers are instances of `baseLodash`.
+  lodash.prototype = baseLodash.prototype;
+
+  LodashWrapper.prototype = baseCreate(baseLodash.prototype);
+  LodashWrapper.prototype.constructor = LodashWrapper;
+
+  LazyWrapper.prototype = baseCreate(baseLodash.prototype);
+  LazyWrapper.prototype.constructor = LazyWrapper;
+
+  // Add functions to the `Set` cache.
+  SetCache.prototype.push = cachePush;
+
   // Add functions that return wrapped values when chaining.
   lodash.callback = callback;
+  lodash.chain = chain;
   lodash.keys = keys;
   lodash.keysIn = keysIn;
   lodash.map = map;
   lodash.matches = matches;
+  lodash.mixin = mixin;
   lodash.pairs = pairs;
   lodash.pluck = pluck;
   lodash.property = property;
+  lodash.restParam = restParam;
+  lodash.tap = tap;
+  lodash.thru = thru;
+  lodash.uniq = uniq;
   lodash.values = values;
 
   // Add aliases.
   lodash.collect = map;
   lodash.iteratee = callback;
+  lodash.unique = uniq;
+
+  // Add functions to `lodash.prototype`.
+  mixin(lodash, lodash);
 
   /*------------------------------------------------------------------------*/
 
   // Add functions that return unwrapped values when chaining.
   lodash.identity = identity;
+  lodash.indexOf = indexOf;
   lodash.isArguments = isArguments;
   lodash.isArray = isArray;
   lodash.isFunction = isFunction;
@@ -2250,7 +3840,30 @@
   lodash.isString = isString;
   lodash.isTypedArray = isTypedArray;
   lodash.last = last;
+  lodash.noop = noop;
+  lodash.now = now;
   lodash.sum = sum;
+
+  mixin(lodash, (function() {
+    var source = {};
+    baseForOwn(lodash, function(func, methodName) {
+      if (!lodash.prototype[methodName]) {
+        source[methodName] = func;
+      }
+    });
+    return source;
+  }()), false);
+
+  /*------------------------------------------------------------------------*/
+
+  lodash.prototype.sample = function(n) {
+    if (!this.__chain__ && n == null) {
+      return sample(this.value());
+    }
+    return this.thru(function(value) {
+      return sample(value, n);
+    });
+  };
 
   /*------------------------------------------------------------------------*/
 
@@ -2262,6 +3875,218 @@
    * @type string
    */
   lodash.VERSION = VERSION;
+
+  // Add `LazyWrapper` methods for `_.drop` and `_.take` variants.
+  arrayEach(['drop', 'take'], function(methodName, index) {
+    LazyWrapper.prototype[methodName] = function(n) {
+      var filtered = this.__filtered__;
+      if (filtered && !index) {
+        return new LazyWrapper(this);
+      }
+      n = n == null ? 1 : nativeMax(nativeFloor(n) || 0, 0);
+
+      var result = this.clone();
+      if (filtered) {
+        result.__takeCount__ = nativeMin(result.__takeCount__, n);
+      } else {
+        result.__views__.push({ 'size': n, 'type': methodName + (result.__dir__ < 0 ? 'Right' : '') });
+      }
+      return result;
+    };
+
+    LazyWrapper.prototype[methodName + 'Right'] = function(n) {
+      return this.reverse()[methodName](n).reverse();
+    };
+  });
+
+  // Add `LazyWrapper` methods that accept an `iteratee` value.
+  arrayEach(['filter', 'map', 'takeWhile'], function(methodName, index) {
+    var type = index + 1,
+        isFilter = type != LAZY_MAP_FLAG;
+
+    LazyWrapper.prototype[methodName] = function(iteratee, thisArg) {
+      var result = this.clone();
+      result.__iteratees__.push({ 'iteratee': getCallback(iteratee, thisArg, 1), 'type': type });
+      result.__filtered__ = result.__filtered__ || isFilter;
+      return result;
+    };
+  });
+
+  // Add `LazyWrapper` methods for `_.first` and `_.last`.
+  arrayEach(['first', 'last'], function(methodName, index) {
+    var takeName = 'take' + (index ? 'Right' : '');
+
+    LazyWrapper.prototype[methodName] = function() {
+      return this[takeName](1).value()[0];
+    };
+  });
+
+  // Add `LazyWrapper` methods for `_.initial` and `_.rest`.
+  arrayEach(['initial', 'rest'], function(methodName, index) {
+    var dropName = 'drop' + (index ? '' : 'Right');
+
+    LazyWrapper.prototype[methodName] = function() {
+      return this.__filtered__ ? new LazyWrapper(this) : this[dropName](1);
+    };
+  });
+
+  // Add `LazyWrapper` methods for `_.pluck` and `_.where`.
+  arrayEach(['pluck', 'where'], function(methodName, index) {
+    var operationName = index ? 'filter' : 'map',
+        createCallback = index ? baseMatches : property;
+
+    LazyWrapper.prototype[methodName] = function(value) {
+      return this[operationName](createCallback(value));
+    };
+  });
+
+  LazyWrapper.prototype.compact = function() {
+    return this.filter(identity);
+  };
+
+  LazyWrapper.prototype.reject = function(predicate, thisArg) {
+    predicate = getCallback(predicate, thisArg, 1);
+    return this.filter(function(value) {
+      return !predicate(value);
+    });
+  };
+
+  LazyWrapper.prototype.slice = function(start, end) {
+    start = start == null ? 0 : (+start || 0);
+
+    var result = this;
+    if (result.__filtered__ && (start > 0 || end < 0)) {
+      return new LazyWrapper(result);
+    }
+    if (start < 0) {
+      result = result.takeRight(-start);
+    } else if (start) {
+      result = result.drop(start);
+    }
+    if (end !== undefined) {
+      end = (+end || 0);
+      result = end < 0 ? result.dropRight(-end) : result.take(end - start);
+    }
+    return result;
+  };
+
+  LazyWrapper.prototype.takeRightWhile = function(predicate, thisArg) {
+    return this.reverse().takeWhile(predicate, thisArg).reverse();
+  };
+
+  LazyWrapper.prototype.toArray = function() {
+    return this.take(POSITIVE_INFINITY);
+  };
+
+  // Add `LazyWrapper` methods to `lodash.prototype`.
+  baseForOwn(LazyWrapper.prototype, function(func, methodName) {
+    var checkIteratee = /^(?:filter|map|reject)|While$/.test(methodName),
+        retUnwrapped = /^(?:first|last)$/.test(methodName),
+        lodashFunc = lodash[retUnwrapped ? ('take' + (methodName == 'last' ? 'Right' : '')) : methodName];
+
+    if (!lodashFunc) {
+      return;
+    }
+    lodash.prototype[methodName] = function() {
+      var args = retUnwrapped ? [1] : arguments,
+          chainAll = this.__chain__,
+          value = this.__wrapped__,
+          isHybrid = !!this.__actions__.length,
+          isLazy = value instanceof LazyWrapper,
+          iteratee = args[0],
+          useLazy = isLazy || isArray(value);
+
+      if (useLazy && checkIteratee && typeof iteratee == 'function' && iteratee.length != 1) {
+        // Avoid lazy use if the iteratee has a "length" value other than `1`.
+        isLazy = useLazy = false;
+      }
+      var interceptor = function(value) {
+        return (retUnwrapped && chainAll)
+          ? lodashFunc(value, 1)[0]
+          : lodashFunc.apply(undefined, arrayPush([value], args));
+      };
+
+      var action = { 'func': thru, 'args': [interceptor], 'thisArg': undefined },
+          onlyLazy = isLazy && !isHybrid;
+
+      if (retUnwrapped && !chainAll) {
+        if (onlyLazy) {
+          value = value.clone();
+          value.__actions__.push(action);
+          return func.call(value);
+        }
+        return lodashFunc.call(undefined, this.value())[0];
+      }
+      if (!retUnwrapped && useLazy) {
+        value = onlyLazy ? value : new LazyWrapper(this);
+        var result = func.apply(value, args);
+        result.__actions__.push(action);
+        return new LodashWrapper(result, chainAll);
+      }
+      return this.thru(interceptor);
+    };
+  });
+
+  // Add `Array` and `String` methods to `lodash.prototype`.
+  arrayEach(['join', 'pop', 'push', 'replace', 'shift', 'sort', 'splice', 'split', 'unshift'], function(methodName) {
+    var protoFunc = (/^(?:replace|split)$/.test(methodName) ? stringProto : arrayProto)[methodName],
+        chainName = /^(?:push|sort|unshift)$/.test(methodName) ? 'tap' : 'thru',
+        fixObjects = !support.spliceObjects && /^(?:pop|shift|splice)$/.test(methodName),
+        retUnwrapped = /^(?:join|pop|replace|shift)$/.test(methodName);
+
+    // Avoid array-like object bugs with `Array#shift` and `Array#splice` in
+    // IE < 9, Firefox < 10, and RingoJS.
+    var func = !fixObjects ? protoFunc : function() {
+      var result = protoFunc.apply(this, arguments);
+      if (this.length === 0) {
+        delete this[0];
+      }
+      return result;
+    };
+
+    lodash.prototype[methodName] = function() {
+      var args = arguments;
+      if (retUnwrapped && !this.__chain__) {
+        return func.apply(this.value(), args);
+      }
+      return this[chainName](function(value) {
+        return func.apply(value, args);
+      });
+    };
+  });
+
+  // Map minified function names to their real names.
+  baseForOwn(LazyWrapper.prototype, function(func, methodName) {
+    var lodashFunc = lodash[methodName];
+    if (lodashFunc) {
+      var key = (lodashFunc.name + ''),
+          names = realNames[key] || (realNames[key] = []);
+
+      names.push({ 'name': methodName, 'func': lodashFunc });
+    }
+  });
+
+  realNames[createHybridWrapper(undefined, BIND_KEY_FLAG).name] = [{ 'name': 'wrapper', 'func': undefined }];
+
+  // Add functions to the lazy wrapper.
+  LazyWrapper.prototype.clone = lazyClone;
+  LazyWrapper.prototype.reverse = lazyReverse;
+  LazyWrapper.prototype.value = lazyValue;
+
+  // Add chaining functions to the `lodash` wrapper.
+  lodash.prototype.chain = wrapperChain;
+  lodash.prototype.commit = wrapperCommit;
+  lodash.prototype.concat = wrapperConcat;
+  lodash.prototype.plant = wrapperPlant;
+  lodash.prototype.reverse = wrapperReverse;
+  lodash.prototype.toString = wrapperToString;
+  lodash.prototype.run = lodash.prototype.toJSON = lodash.prototype.valueOf = lodash.prototype.value = wrapperValue;
+
+  // Add function aliases to the `lodash` wrapper.
+  lodash.prototype.collect = lodash.prototype.map;
+  lodash.prototype.head = lodash.prototype.first;
+  lodash.prototype.select = lodash.prototype.filter;
+  lodash.prototype.tail = lodash.prototype.rest;
 
   /*--------------------------------------------------------------------------*/
 

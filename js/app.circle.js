@@ -109,17 +109,22 @@ var app = (function(parent, $, L, cartodb) {
                 return this;
               });
 
-            // grab the neighborhoods
-            el.sql.execute(this.SQLqueryHoods,{
-              lng: el.center.lng,
-              lat: el.center.lat,
-              distance: this.distance,
-              ratio: app.map.props.hoodRatio(el.map.getZoom())
-            })
-              .done(function(data){
-                console.log('hoods: ', data);
-                app.circle.bufferMaker.writeHoods(data);
-              });
+            // grab the neighborhood names, but only for zooms >= 13
+            if (app.map.props.zoom >= 13) {
+              el.sql.execute(this.SQLqueryHoods,{
+                lng: el.center.lng,
+                lat: el.center.lat,
+                distance: this.distance,
+                ratio: app.map.props.hoodRatio(el.map.getZoom())
+              })
+                .done(function(data){
+                  console.log('hoods: ', data);
+                  app.circle.bufferMaker.writeHoods(data);
+                });
+            } else if (app.map.props.zoom < 13) {
+              app.circle.bufferMaker.clearHoods();
+            }
+
           }
           return this;
         },
@@ -132,11 +137,14 @@ var app = (function(parent, $, L, cartodb) {
             el.sum = _.sum(el.dataStore, function(obj) { return obj.profit; });
             el.tax = _.sum(el.dataStore, function(obj) { return obj.tax; });
 
+            var plucked =  _.pluck(el.dataStore, 'council');
+            el.councils = _.uniq(plucked).sort();
+
             // credit: http://stackoverflow.com/questions/17563677/convert-javascript-number-to-currency-format-but-without-or-any-currency-sym
             var profit = "$" + (Math.round(el.sum) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
             var tax = "$" + (Math.round(el.tax) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 
-            console.log('profit: ', profit, ' tax: ', tax);
+            console.log('profit: ', profit, ' tax: ', tax, ' councils: ', el.councils);
 
             $('.profit').text(profit);
             $('.tax').text(tax);
@@ -161,12 +169,14 @@ var app = (function(parent, $, L, cartodb) {
             $('h4.hoods').css("display","block");
           
           } else {
-
-            $('h4.hoods.list').html("");
-            $('h4.hoods').css("display","none");
-
+            app.circle.bufferMaker.clearHoods();
           }
 
+        },
+
+        clearHoods : function() {
+            $('h4.hoods.list').html("");
+            $('h4.hoods').css("display","none");
         },
 
         // clear the current L.circle then draw the new one
