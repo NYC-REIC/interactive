@@ -68,7 +68,7 @@ var app = (function(parent, $, L, cartodb) {
           if (this.distance && this.center) {
             // SQL query for data aggergation
             this.SQLquerySUM = "SELECT (after_d_01 * 0.01) AS tax, (after_d_01 - before__01) AS profit, " +
-              "council, after_doc_date as date " +
+              "council, borocode, after_doc_date as date " +
               "FROM nyc_flips_pluto_150712 WHERE ST_Within(" +
               "the_geom_webmercator, ST_Buffer(ST_Transform(ST_GeomFromText(" +
               "'Point({{lng}} {{lat}})',4326)," + "3857)," +
@@ -137,14 +137,26 @@ var app = (function(parent, $, L, cartodb) {
             el.sum = _.sum(el.dataStore, function(obj) { return obj.profit; });
             el.tax = _.sum(el.dataStore, function(obj) { return obj.tax; });
 
-            var plucked =  _.pluck(el.dataStore, 'council');
-            el.councils = _.uniq(plucked).sort();
+            // grab unique council #'s within the circle
+            el.councils = _.chain(el.dataStore)
+              .pluck('council')
+              .unique()
+              .sortBy()
+              .value();
+
+            // grab unique borough code & convert to names to display at lower zooms.
+            var borocodes = _.chain(el.dataStore)
+              .pluck('borocode')
+              .unique()
+              .sortBy()
+              .value();
+
 
             // credit: http://stackoverflow.com/questions/17563677/convert-javascript-number-to-currency-format-but-without-or-any-currency-sym
             var profit = "$" + (Math.round(el.sum) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
             var tax = "$" + (Math.round(el.tax) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 
-            console.log('profit: ', profit, ' tax: ', tax, ' councils: ', el.councils);
+            console.log('profit: ', profit, ' tax: ', tax, ' councils: ', el.councils, ' borocodes: ', borocodes);
 
             $('.profit').text(profit);
             $('.tax').text(tax);
