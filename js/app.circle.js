@@ -36,9 +36,12 @@ var app = (function(parent, $, L, cartodb) {
         el.centerPoint = L.latLng([el.center.lat,el.center.lng]);
       },
       
-      // this object contains chainable functions for creating the circle, updating the cartocss & data aggregation
+      // this object contains chainable functions for creating the circle, 
+      // updating the cartocss & data aggregation
+      // to do: could probably separate this out into other objects within app.circle ...
       bufferMaker : {
 
+        // styling for the circle UI which is an instance of L.circle()
         circleParams : {
           color: "#000",
           weight: 2,
@@ -56,16 +59,16 @@ var app = (function(parent, $, L, cartodb) {
 
         bufferCenter : function () {
           if (this.distance && this.center) {
-            // this.buffer = turf.buffer(this.center, this.distance, 'kilometers');
             this.circle = L.circle([el.center.lat, el.center.lng],(this.distance * 0.78), this.circleParams) ;
           }
           return this;
         },
 
         webMercatorCircle : function() {
-          // spatially query the CartoDB data layer using PostGIS 
+          // spatially query the CartoDB data layers using PostGIS, hurrah! 
           
           if (this.distance && this.center) {
+            
             // SQL query for data aggergation
             this.SQLquerySUM = "SELECT (after_d_01 * 0.01) AS tax, (after_d_01 - before__01) AS profit, " +
               "council, borocode, after_doc_date as date " +
@@ -74,14 +77,15 @@ var app = (function(parent, $, L, cartodb) {
               "'Point({{lng}} {{lat}})',4326)," + "3857)," +
               "{{distance}}))";        
             
-            // SQL query for data layer cartocss update
+            // SQL query for data layer's cartocss update
             // we create another column called "within" that gives the data a boolean value for being in or out of the circle
             this.SQLqueryDL = "SELECT a.after_d_01, a.before__01, a.cartodb_id, a.the_geom_webmercator, a.within " +
               "FROM ( SELECT *, ST_DWithin( the_geom_webmercator, ST_Transform( ST_GeomFromText( 'Point(" +
               el.center.lng + ' ' + el.center.lat + ")', 4326), " + "3857)," + (this.distance) + ") as within " +
               "FROM " + el.taxLots + ") as a";
             
-            // SQL query for grabbing neighborhoods
+            // SQL query for grabbing neighborhood polygons that overlap with the circle
+            // only grab the hood names for polygons that have 50% or more of their area within the circle
             this.SQLqueryHoods = "SELECT neighborhood FROM pediacities_hoods, " + 
               "ST_Buffer(ST_Transform(ST_GeomFromText('Point({{lng}} {{lat}})',4326),3857),{{distance}}) as buffer " +
               "WHERE ST_Intersects(the_geom_webmercator, buffer) " +
@@ -292,6 +296,7 @@ var app = (function(parent, $, L, cartodb) {
         },
 
         // clear the current L.circle then draw the new one
+        // this makes it appear as if the circle is always staying in the center of the screen
         testBuffer : function () {
           if (this.distance) {
             el.fgTest.clearLayers();
@@ -300,7 +305,7 @@ var app = (function(parent, $, L, cartodb) {
         }
       }, // end bufferMaker
 
-      // draws the circle
+      // draws the circle UI
       makeBuffer : function() {
         app.circle.bufferMaker
           .centerToTop(el.centerPoint, el.topPoint)
@@ -308,7 +313,7 @@ var app = (function(parent, $, L, cartodb) {
           .testBuffer();
       },
 
-      // fires the PostGIS query
+      // fires the CartoDB PostGIS queries
       queryCDB : function() {
         app.circle.bufferMaker.webMercatorCircle();
       }
