@@ -194,7 +194,7 @@ h2.tax {
   /*top: 80px;*/
 }
 
-.hoods.list {
+.hoods.list, .date-range {
   font-weight: normal;
 }
 
