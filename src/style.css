@@ -96,7 +96,7 @@ ul.icons.social li:last-child {
 }
 
 .icon:hover {
-  color: #808080;
+  color: #FF6BB5;
 }
 
 /* UI boxes */
@@ -115,7 +115,6 @@ header.ui {
   width: 840px;
   height: auto;
   margin: 0 auto;
-  padding: 10px;
   text-align: center;
   border: none;
   background: transparent;
@@ -196,6 +195,10 @@ h2.tax {
 
 .hoods.list, .date-range {
   font-weight: normal;
+}
+
+.hoods:first-of-type {
+  margin-top: 4%;
 }
 
 /* "within this circle..." */

@@ -31,6 +31,23 @@ var app = (function(parent, w, d, $, d3) {
       $profit.css('left', poffset);
     }
 
+    console.log('circle width/radius: ', cwidth);
+
+    // change the spacing of the circle text based on the circle's size
+    if (cwidth >= 700 ) {
+      $('.total-flips').css("margin-top", "10%");
+      $('.total-tax').css("margin-top", "8%");
+      $('.hoods:first-of-type').css("margin-top", "4%");
+    } else if (cwidth >=500 && cwidth < 700) {
+      $('.total-flips').css("margin-top", "5%");
+      $('.total-tax').css("margin-top", "5%");
+      $('.hoods:first-of-type').css("margin-top", "4%");
+    } else if (cwidth < 500) {
+      $('.total-flips').css("margin-top", "2%");
+      $('.total-tax').css("margin-top", "2%");
+      $('.hoods:first-of-type').css("margin-top", "1%");
+    }
+
   }
 
   parent.curveText = function() {
@@ -43,8 +60,7 @@ var app = (function(parent, w, d, $, d3) {
 
     var svg = d3.select('svg');
     
-    // need to add an id property to the circle so that we can
-    // link our text to the circle svg
+    // need to add an id property to the circle so that we can link our text to the circle svg
     svg.select('.leafletCircle').attr('id','curve');
     
     svg.append('text')
@@ -58,7 +74,13 @@ var app = (function(parent, w, d, $, d3) {
         text = d3.select('#curve-text'),
         pathLength = textPath.node().getTotalLength(),
         textLength = text.node().getComputedTextLength(),
-        xoffset = ((pathLength / 4) * 3) + textLength;
+        xoffset;
+
+    if ( d3.select('.leafletCircle').node().getBoundingClientRect().width < 500) {
+      xoffset = ((pathLength / 4) * 3) + textLength;
+    } else {
+      xoffset = ((pathLength / 4) * 3.1) + textLength;
+    }
 
     text.attr('x', xoffset);
     text.attr('dy', -10);
