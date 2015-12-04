@@ -122,20 +122,30 @@ var app = (function(parent, $, L, cartodb) {
                   app.circle.bufferMaker.writeHoods(data);
                 });
             } else if (app.map.props.zoom < 13) {
-              app.circle.bufferMaker.clearHoods();
+              // app.circle.bufferMaker.clearHoods();
             }
 
           }
           return this;
         },
 
-        // helper function, uses lodash to do sum rows returned from CDB query
+        // helper function, uses lodash to sum rows returned from CDB query
         crunchData : function(data) {
             console.log('crunching data: ', data);
 
             el.dataStore = data.rows.slice(); 
             el.sum = _.sum(el.dataStore, function(obj) { return obj.profit; });
             el.tax = _.sum(el.dataStore, function(obj) { return obj.tax; });
+
+            // if the map zoom is less than z13 write borough names to the circle UI
+            if (app.map.props.zoom < 13) {
+              var borocodes = _.chain(el.dataStore)
+                .pluck('borocode')
+                .value();
+
+              app.circle.bufferMaker.calcBoroughs(borocodes);
+
+            }
 
             // grab unique council #'s within the circle
             el.councils = _.chain(el.dataStore)
@@ -144,22 +154,112 @@ var app = (function(parent, $, L, cartodb) {
               .sortBy()
               .value();
 
-            // grab unique borough code & convert to names to display at lower zooms.
-            var borocodes = _.chain(el.dataStore)
-              .pluck('borocode')
-              .unique()
-              .sortBy()
-              .value();
-
-
             // credit: http://stackoverflow.com/questions/17563677/convert-javascript-number-to-currency-format-but-without-or-any-currency-sym
             var profit = "$" + (Math.round(el.sum) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
             var tax = "$" + (Math.round(el.tax) + "").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 
-            console.log('profit: ', profit, ' tax: ', tax, ' councils: ', el.councils, ' borocodes: ', borocodes);
+            // console.log('profit: ', profit, ' tax: ', tax, ' councils: ', el.councils, ' borocodes: ', unique_borocodes);
 
             $('.profit').text(profit);
             $('.tax').text(tax);
+        },
+
+        // find out our borough codes
+        calcBoroughs : function(borocodes) {
+          // we don't want to write a borough name to the DOM if there are very little tax lots in the circle
+          // so only write it if the borocode value makes up 1% or more of the total values in the array
+          
+          // to store total counts for each borough 
+          var bcount = {
+                "mn" : 0, 
+                "bx" : 0, 
+                "bk" : 0,
+                "qn" : 0
+              },
+            len = borocodes.length,
+            toWrite = []; // array to hold final borocodes to write to the DOM
+
+          // console.log('borocodes.length', borocodes.length);
+
+          borocodes.forEach(function(el,i,arr){
+            // tally up our boroughs!
+            if (el === 1) {
+              bcount.mn += 1;
+            } else if (el === 2) {
+              bcount.bx += 1;
+            } else if (el === 3) {
+              bcount.bk += 1;
+            } else if (el === 4) {
+              bcount.qn += 1;
+            }
+
+            // on the last loop find out if our totals match our criteria
+            if (i === len - 1) {
+              _.forIn(bcount, function(v, k){
+                // console.log(k,v);                
+                if (v >= (len * 0.01)) {
+                  toWrite.push(k)
+                } 
+              });
+            }
+          });
+
+          // console.log('toWrite: ', toWrite);
+
+          // write our final borocodes to the DOM!
+          app.circle.bufferMaker.writeBoroughs(toWrite);
+        },
+
+        // helper fn to translate borough code to corresponding string
+        // originally wrote this because I was dealing with numeric codes
+        // probably is no longer necessary
+        getBorough : function(x) {
+          var borough;
+
+          switch(x) {
+            case ("mn"):
+              borough = "Manhattan";
+              break;
+            case ("bx"):
+              borough = "Bronx";
+              break;
+            case ("bk"):
+              borough = "Brooklyn";
+              break;
+            case ("qn"):
+              borough = "Queens";
+              break;
+            default:
+              borough = "";
+          }
+
+          return borough;
+        },
+
+        // write borough names to the UI
+        writeBoroughs : function(data) {
+
+          if (data.length) {
+            var boroughs = "";
+            
+            data.forEach(function(el,i,arr){
+              
+              boroughs += app.circle.bufferMaker.getBorough(el);
+              
+              if (i<arr.length -1){
+                boroughs += ", ";
+              }
+
+            });
+
+            $('h4.hoods.list').html(boroughs);
+            $('h4.hoods').css("display","block");
+
+          } else {
+            app.circle.bufferMaker.clearHoods();
+          }
+
+          console.log('boroughs: ', boroughs);
         },
 
         // helper function to write neighborhoods to the map
