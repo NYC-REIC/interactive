@@ -31,7 +31,7 @@ var app = (function(parent, w, d, $, d3) {
       $profit.css('left', poffset);
     }
 
-    console.log('circle width/radius: ', cwidth);
+    // console.log('circle width/radius: ', cwidth);
 
     // change the spacing of the circle text based on the circle's size
     if (cwidth >= 700 ) {

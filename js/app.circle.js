@@ -92,7 +92,7 @@ var app = (function(parent, $, L, cartodb) {
               "AND (ST_Area(ST_Intersection(the_geom_webmercator, buffer)) / " + 
               "ST_Area(the_geom_webmercator)) >= {{ratio}}";
             
-            console.log(this.SQLqueryHoods);
+            // console.log(this.SQLqueryHoods);
 
             // update the data layer's cartocss
             el.dataLayer.set({
@@ -114,7 +114,7 @@ var app = (function(parent, $, L, cartodb) {
               });
 
             // grab the neighborhood names, but only for zooms >= 13
-            if (app.map.props.zoom >= 13) {
+            if (app.map.props.zoom >= 14) {
               el.sql.execute(this.SQLqueryHoods,{
                 lng: el.center.lng,
                 lat: el.center.lat,
@@ -122,11 +122,9 @@ var app = (function(parent, $, L, cartodb) {
                 ratio: app.map.props.hoodRatio(el.map.getZoom())
               })
                 .done(function(data){
-                  console.log('hoods: ', data);
+                  // console.log('hoods: ', data);
                   app.circle.bufferMaker.writeHoods(data);
                 });
-            } else if (app.map.props.zoom < 13) {
-              // app.circle.bufferMaker.clearHoods();
             }
 
           }
@@ -135,14 +133,14 @@ var app = (function(parent, $, L, cartodb) {
 
         // helper function, uses lodash to sum rows returned from CDB query
         crunchData : function(data) {
-            console.log('crunching data: ', data);
+            // console.log('crunching data: ', data);
 
             el.dataStore = data.rows.slice(); 
             el.sum = _.sum(el.dataStore, function(obj) { return obj.profit; });
             el.tax = _.sum(el.dataStore, function(obj) { return obj.tax; });
 
             // if the map zoom is less than z13 write borough names to the circle UI
-            if (app.map.props.zoom < 13) {
+            if (app.map.props.zoom < 14) {
               var borocodes = _.chain(el.dataStore)
                 .pluck('borocode')
                 .value();
@@ -263,7 +261,6 @@ var app = (function(parent, $, L, cartodb) {
             app.circle.bufferMaker.clearHoods();
           }
 
-          console.log('boroughs: ', boroughs);
         },
 
         // helper function to write neighborhoods to the map

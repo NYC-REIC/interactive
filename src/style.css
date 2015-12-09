@@ -226,3 +226,11 @@ h2.tax {
   shape-rendering: crispEdges;
 }
 
+.bar rect {
+  fill: #FF6BB5;
+  shape-rendering: crispEdges;
+}
+
+.bar text {
+  fill: #fff;
+}
