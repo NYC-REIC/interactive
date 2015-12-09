@@ -4,34 +4,10 @@ var app = (function(parent, d3){
 
   parent.graph = {
 
-    parseData : function(attr) {
-      // returns an array of arrays with only the formmatted date object and attribute values
+    makeGraph : function(data) {
 
-      var toReturn = [];
-
-      var data = _.chain(el.dataStore)
-          .sortBy("date")
-          .value();
-
-      // call like formatDate.parse("2015-12-08");
+      // helper function to grab date object from date string
       var formatDate = d3.time.format("%Y-%m-%d");
-
-      var dates = _.chain(data)
-          .pluck("date")
-          .map(formatDate.parse)
-          .value()
-
-      var values = _.chain(data)
-          .pluck(attr)
-          .value();
-
-      toReturn = _.zip(dates,values);
-
-      return toReturn;
-
-    },
-
-    makeGraph : function() {
 
       var binsize = 1,
           minbin = 2003,
@@ -47,13 +23,36 @@ var app = (function(parent, d3){
       var xmin = minbin - 1,
           xmax = maxbin + 1;
 
-      var x = d3.scale.linear()
-          .domain([minbin, maxbin])
-          .range([0, width]);
+      // create an array to store our histogram's data
+      histdata = new Array(numbins);
+      
+      for (var i = 0; i < numbins; i++) {
+          histdata[i] = { numFlips: 0, totalProfit: 0 };
+      }
 
-      var data = d3.layout.histogram()
-          .bins(x.ticks(numbins))
-          (values);
+      // group our data into bins, one for each year
+      data.forEach(function(d){
+        // get integer year of d
+        var year = formatDate.parse(d.date).getFullYear();
+        // put into appropriate position in array for corresponding bin
+        var bin = year - minbin;
+
+        if ((bin.toString() !== "NaN") && (bin < histdata.length)) {
+          histdata[bin].numFlips += 1;
+          histdata[bin].totalProfit += d.profit;
+        }
+
+      });
+
+      console.log(histdata);
+
+      // var x = d3.scale.linear()
+      //     .domain([minbin, maxbin])
+      //     .range([0, width]);
+
+      // var data = d3.layout.histogram()
+      //     .bins(x.ticks(numbins))
+      //     (values);
 
     }
 
