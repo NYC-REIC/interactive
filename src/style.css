@@ -278,13 +278,12 @@ h2.tax {
 
 /* D3 histogram stuff */
 .graph {
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
+  bottom: 23px;
+  right: 45px;
+  height: 200px;
+  width: 425px;
+  background: transparent;
+  border: none;
 }
 
 .axis path, .axis line {
@@ -298,6 +297,3 @@ h2.tax {
   shape-rendering: crispEdges;
 }
 
-.bar text {
-  fill: #fff;
-}
