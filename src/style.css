@@ -280,15 +280,15 @@ h2.tax {
 .graph {
   bottom: 23px;
   right: 45px;
-  height: 200px;
-  width: 425px;
+  height: 175px;
+  width: 375px;
   background: transparent;
   border: none;
 }
 
 .axis path, .axis line {
   fill: none;
-  stroke: #000;
+  stroke: #333;
   shape-rendering: crispEdges;
 }
 
@@ -297,3 +297,7 @@ h2.tax {
   shape-rendering: crispEdges;
 }
 
+.graph text {
+  font-size: 13px;
+  fill: #333;
+}

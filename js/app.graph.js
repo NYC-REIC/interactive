@@ -14,11 +14,14 @@ var app = (function(parent, d3){
           maxbin = 2015
           numbins = (maxbin - minbin) / binsize;
 
+      var graphRect = d3.select('.graph.ui').node().getClientRects();
+          graphHeight = graphRect[0].height,
+          graphWidth = graphRect[0].width;
 
       var binmargin = 0.2,
-          margin = {top: 10, right: 30, bottom: 30, left: 60},
-          width = 425 - margin.left - margin.right,
-          height = 200 - margin.top - margin.bottom;
+          margin = {top: 10, right: 30, bottom: 30, left: 50},
+          width = graphWidth - margin.left - margin.right,
+          height = graphHeight - margin.top - margin.bottom;
 
       var xmin = minbin - 1,
           xmax = maxbin + 1;
