@@ -28,6 +28,10 @@ body {
   box-sizing: inherit;
 }
 
+.hidden {
+  display: none;
+}
+
 .text-shadow {
   text-shadow:
    -1px -1px 0 #fff,  
@@ -40,7 +44,7 @@ body {
   position: relative;
 }
 
-h1, h2, h3, h4, h5, p {
+h1, h2, h3, h4, h5, p, div {
   font-family: "neuzeit-grotesk", sans-serif; 
   color: #333;
   margin: 0;
@@ -209,6 +213,70 @@ h2.tax {
   color: #000;
 }
 
+/* modal pop-up */
+.modal {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  opacity: 0;
+  -webkit-transition: opacity 400ms ease-in;
+  -moz-transition: opacity 400ms ease-in;
+  transition: opacity 400ms ease-in;
+  pointer-events: none;
+}
+
+.modal:target {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal > div {
+  width: 400px;
+  position: relative;
+  margin: 10% auto;
+  padding: 20px 20px 13px 20px;
+  border-radius: 5px;
+  background: #fff;
+}
+
+.modal > div > p {
+  margin-bottom: 12px;
+  line-height: 18px;
+}
+
+.modal > div > h3 {
+  margin-bottom: 12px;
+}
+
+.close {
+  background: #606061;
+  color: #FFFFFF;
+  line-height: 25px;
+  position: absolute;
+  right: -12px;
+  text-align: center;
+  top: -10px;
+  width: 24px;
+  text-decoration: none;
+  font-weight: bold;
+  -webkit-border-radius: 12px;
+  -moz-border-radius: 12px;
+  border-radius: 12px;
+  -moz-box-shadow: 1px 1px 3px #000;
+  -webkit-box-shadow: 1px 1px 3px #000;
+  box-shadow: 1px 1px 3px #000;
+}
+
+.close:hover {
+  background: #FF6BB5;
+}
+
+
+/* D3 histogram stuff */
 .graph {
   bottom: 0;
   left: 0;
@@ -219,7 +287,6 @@ h2.tax {
   border-bottom: none;
 }
 
-/* D3 histogram stuff */
 .axis path, .axis line {
   fill: none;
   stroke: #000;
