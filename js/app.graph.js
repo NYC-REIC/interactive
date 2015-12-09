@@ -4,10 +4,37 @@ var app = (function(parent, d3){
 
   parent.graph = {
 
+    parseData : function(attr) {
+      // returns an array of arrays with only the formmatted date object and attribute values
+
+      var toReturn = [];
+
+      var data = _.chain(el.dataStore)
+          .sortBy("date")
+          .value();
+
+      // call like formatDate.parse("2015-12-08");
+      var formatDate = d3.time.format("%Y-%m-%d");
+
+      var dates = _.chain(data)
+          .pluck("date")
+          .map(formatDate.parse)
+          .value()
+
+      var values = _.chain(data)
+          .pluck(attr)
+          .value();
+
+      toReturn = _.zip(dates,values);
+
+      return toReturn;
+
+    },
+
     makeGraph : function() {
 
       var binsize = 1,
-          minbin = 2000,
+          minbin = 2003,
           maxbin = 2015
           numbins = (maxbin - minbin) / binsize;
 
@@ -20,7 +47,13 @@ var app = (function(parent, d3){
       var xmin = minbin - 1,
           xmax = maxbin + 1;
 
-      var data = el.dataStore;
+      var x = d3.scale.linear()
+          .domain([minbin, maxbin])
+          .range([0, width]);
+
+      var data = d3.layout.histogram()
+          .bins(x.ticks(numbins))
+          (values);
 
     }
 
