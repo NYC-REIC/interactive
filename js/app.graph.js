@@ -1,30 +1,35 @@
 var app = (function(parent, d3){
-  // d3 histograms
+  // for generating the d3 histogram
+  
   var el = parent.el;
+
+  // d3 local variables
+  var binsize = 1,
+      minbin = 2003,
+      maxbin = 2015
+      numbins = (maxbin - minbin) / binsize;
+
+  var graphRect = d3.select('.graph.ui').node().getClientRects();
+      graphHeight = graphRect[0].height,
+      graphWidth = graphRect[0].width;
+
+  var binmargin = 0.2,
+      margin = {top: 10, right: 30, bottom: 30, left: 50},
+      width = graphWidth - margin.left - margin.right,
+      height = graphHeight - margin.top - margin.bottom;
+
+  var xmin = minbin - 1,
+      xmax = maxbin + 1;
+
+  var x, x2, y, xAxis, yAxis, svg, bar;
 
   parent.graph = {
 
-    makeGraph : function(data) {
+    makeHistData : function(data) {
+      // groups the data into bins for the d3 histogram
 
       // helper function to grab date object from date string
       var formatDate = d3.time.format("%Y-%m-%d");
-
-      var binsize = 1,
-          minbin = 2003,
-          maxbin = 2015
-          numbins = (maxbin - minbin) / binsize;
-
-      var graphRect = d3.select('.graph.ui').node().getClientRects();
-          graphHeight = graphRect[0].height,
-          graphWidth = graphRect[0].width;
-
-      var binmargin = 0.2,
-          margin = {top: 10, right: 30, bottom: 30, left: 50},
-          width = graphWidth - margin.left - margin.right,
-          height = graphHeight - margin.top - margin.bottom;
-
-      var xmin = minbin - 1,
-          xmax = maxbin + 1;
 
       // create an array to store our histogram's data
       histdata = new Array(numbins);
@@ -47,41 +52,47 @@ var app = (function(parent, d3){
 
       });
 
-      console.log(histdata);
+      return histdata;
+    },
 
-      var x = d3.scale.linear()
+    makeGraph : function(data) {
+
+      var histdata = app.graph.makeHistData(data);
+
+      x = d3.scale.linear()
           .domain([0, (xmax - xmin)])
           .range([0, width]);
 
-      var x2 = d3.scale.linear()
+      x2 = d3.scale.linear()
           .domain([xmin, xmax])
           .range([0, width]);
 
-      var y = d3.scale.linear()
+      y = d3.scale.linear()
           .domain([0, d3.max(histdata, function(d){
                   return d.numFlips;
                 })])
           .range([height, 0]);
 
-      var xAxis = d3.svg.axis()
+      xAxis = d3.svg.axis()
           .scale(x2)
           .tickFormat(function(d) {
             return d.toString();
           })
           .orient("bottom");
 
-      var yAxis = d3.svg.axis()
+      yAxis = d3.svg.axis()
           .scale(y)
           .ticks(8)
-          .orient("left")
+          .orient("left");
 
-      var svg = d3.select(".graph.ui").append("svg")
+      svg = d3.select(".graph.ui").append("svg")
+          .attr("position", "relative")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
           .append("g")
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-      var bar = svg.selectAll(".bar")
+      bar = svg.selectAll(".bar")
           .data(histdata)
           .enter()
           .append("g")
@@ -123,7 +134,51 @@ var app = (function(parent, d3){
         .attr("transform", "rotate(-90)")
         .style("text-anchor", "middle")
         .text("Number of Flips");
-    }
+    },
+
+    updateGraph : function(data) {
+      // update the data in the histogram
+      
+      // group the data into new bins
+      var newhistdata = app.graph.makeHistData(data);
+
+      console.log(histdata);
+
+      var x = null, x2 = null, y = null, xAxis = null, yAxis = null;
+
+      console.log(svg, binsize, binmargin, height);
+
+      y = d3.scale.linear()
+          .domain([0, d3.max(newhistdata, function(d){
+                  return d.numFlips;
+                })])
+          .range([height, 0]);
+
+      yAxis = d3.svg.axis()
+          .scale(y)
+          .ticks(8)
+          .orient("left");
+
+      bar.data(newhistdata)
+        .transition()
+        .duration(1000)
+        .attr("transform", function(d,i) {
+            return "translate(" + x2(i * binsize + minbin) + "," + y(d.numFlips) + ")"; 
+          });
+      
+      bar.append("rect")
+        .attr("x", x(binmargin))
+        .attr("width", x(binsize - 2 * binmargin))
+        .attr("height", function(d) { return height - y(d.numFlips); });
+
+      d3.select('.x.axis')
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+      
+      d3.select('.y.axis')
+        .attr("transform", "translate(0,0)")
+        .call(yAxis);
+    },
 
   };
 
