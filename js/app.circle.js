@@ -107,8 +107,10 @@ var app = (function(parent, $, L, cartodb) {
               distance: this.distance
             })
               .done(function(data){
+                el.dataStore = data.rows.slice();
                 app.circle.bufferMaker.crunchData(data);
                 app.circleElems();
+                app.graph.main(el.dataStore);
                 this.data = data;
                 return this;
               });
@@ -134,8 +136,7 @@ var app = (function(parent, $, L, cartodb) {
         // helper function, uses lodash to sum rows returned from CDB query
         crunchData : function(data) {
             // console.log('crunching data: ', data);
-
-            el.dataStore = data.rows.slice(); 
+ 
             el.sum = _.sum(el.dataStore, function(obj) { return obj.profit; });
             el.tax = _.sum(el.dataStore, function(obj) { return obj.tax; });
 

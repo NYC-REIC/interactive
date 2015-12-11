@@ -14,7 +14,7 @@ var app = (function(parent, d3){
       graphWidth = graphRect[0].width;
 
   var binmargin = 0.2,
-      margin = {top: 10, right: 30, bottom: 30, left: 50},
+      margin = {top: 10, right: 30, bottom: 40, left: 60},
       width = graphWidth - margin.left - margin.right,
       height = graphHeight - margin.top - margin.bottom;
 
@@ -24,6 +24,16 @@ var app = (function(parent, d3){
   var x, x2, y, xAxis, yAxis, svg, bar;
 
   parent.graph = {
+
+    main : function(data) {
+
+      if (svg) {
+        app.graph.updateGraph(data);
+      } else {
+        app.graph.makeGraph(data);
+      }
+
+    },
 
     makeHistData : function(data) {
       // groups the data into bins for the d3 histogram
@@ -112,13 +122,12 @@ var app = (function(parent, d3){
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
 
-      // no need to add the label "year"
-      // svg.append("text")
-      //   .attr("class", "xlabel")
-      //   .attr("text-anchor", "middle")
-      //   .attr("x", width / 2)
-      //   .attr("y", height + margin.bottom)
-      //   .text("");
+      svg.append("text")
+        .attr("class", "xlabel")
+        .attr("text-anchor", "middle")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom -5)
+        .text("year");
 
       // y-axis & labels
       svg.append("g")
@@ -142,42 +151,30 @@ var app = (function(parent, d3){
       // group the data into new bins
       var newhistdata = app.graph.makeHistData(data);
 
-      console.log(histdata);
-
-      var x = null, x2 = null, y = null, xAxis = null, yAxis = null;
-
-      console.log(svg, binsize, binmargin, height);
-
-      y = d3.scale.linear()
-          .domain([0, d3.max(newhistdata, function(d){
-                  return d.numFlips;
-                })])
-          .range([height, 0]);
+      // re calc the y scale and axis using the new data
+      y.domain([0, d3.max(newhistdata, function(d){
+                            return d.numFlips;
+                          })]);
 
       yAxis = d3.svg.axis()
           .scale(y)
           .ticks(8)
           .orient("left");
 
+      // write new data to our bars, select rects and calc their height
       bar.data(newhistdata)
         .transition()
         .duration(1000)
         .attr("transform", function(d,i) {
             return "translate(" + x2(i * binsize + minbin) + "," + y(d.numFlips) + ")"; 
-          });
-      
-      bar.append("rect")
+          })
+        .select("rect")
         .attr("x", x(binmargin))
         .attr("width", x(binsize - 2 * binmargin))
         .attr("height", function(d) { return height - y(d.numFlips); });
 
-      d3.select('.x.axis')
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
-      
-      d3.select('.y.axis')
-        .attr("transform", "translate(0,0)")
-        .call(yAxis);
+      d3.select('.x.axis').call(xAxis);
+      d3.select('.y.axis').call(yAxis);
     },
 
   };

@@ -67,8 +67,8 @@ nav {
 .social-share {
   z-index: 100;
   position: absolute;
-  left: 10px;
-  bottom: 10px;
+  right: 10px;
+  top: 10px;
   height: 50px;
 }
 
@@ -279,7 +279,7 @@ h2.tax {
 /* D3 histogram stuff */
 .graph {
   bottom: 23px;
-  right: 45px;
+  left: 10px;
   height: 175px;
   width: 375px;
   background: transparent;
