@@ -1,14 +1,18 @@
 var app = (function(parent, w, d, $, d3) {
   // handles UI calculations
 
+  var el = parent.el;
+
   parent.circleElems = function() {
     // set the positioning of the profit & tax text to match the circle
 
     var circle = d3.select('.leafletCircle'),
         ctop = circle.node().getBoundingClientRect().top,
         cleft = circle.node().getBoundingClientRect().left,
-        cwidth = circle.node().getBoundingClientRect().width,
-        cheight = circle.node().getBoundingClientRect().height;
+        cwidth = Math.round(circle.node().getBoundingClientRect().width),
+        cheight = Math.round(circle.node().getBoundingClientRect().height);
+
+    el.cradius = Math.round((cwidth + cheight) / 2);
 
     var width = w.innerWidth,
         height = w.innerHeight,
@@ -47,6 +51,11 @@ var app = (function(parent, w, d, $, d3) {
       $('.total-tax').css("margin-top", "2%");
       $('.hoods:first-of-type').css("margin-top", "1%");
     }
+
+    // change the size of the modal
+    var $modal = $('#open-modal > div');
+    $modal.width(el.cradius);
+    $modal.height(el.cradius); 
 
   }
 
@@ -87,7 +96,6 @@ var app = (function(parent, w, d, $, d3) {
   }
 
   parent.calcUI = function() {
-    var el = parent.el;
     var $header = $('header'),
           top = $header.offset().top,
           h = $header.height(),

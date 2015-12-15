@@ -51,6 +51,15 @@ h1, h2, h3, h4, h5, p, div {
   padding: 0;
 }
 
+a {
+  color: #FF6BB5;
+  transition: color 0.5s ease;
+}
+
+a:hover {
+  color: #CE0059;
+}
+
 /* nav elements & social icons */
 nav {
   position: absolute;
@@ -243,40 +252,47 @@ h2.tax {
   position: relative;
   margin: 10% auto;
   padding: 20px 20px 13px 20px;
-  border-radius: 5px;
+  border-radius: 50%;
   background: #fff;
 }
 
 .modal > div > p {
-  margin-bottom: 12px;
-  line-height: 18px;
+  margin: 0 auto;
+  margin-bottom: 20px;
+  line-height: 20px;
+  width: 65%;
 }
 
-.modal > div > h3 {
+.modal > div > p:first-of-type {
+  margin-top: 5%;
+}
+
+.modal > div > p.close-modal {
+  margin-top: 6%;
+  text-align: center;
+}
+
+.modal > div > h2 {
+  margin-top: 7%;
   margin-bottom: 12px;
+  font-size: 2em;
+  text-align: center;
+  color: #FF6BB5;
 }
 
 .close {
-  background: #606061;
-  color: #FFFFFF;
-  line-height: 25px;
-  position: absolute;
-  right: -12px;
-  text-align: center;
-  top: -10px;
+  margin: 0 auto;
   width: 24px;
+  color: #999;
+  line-height: 25px;
+  text-align: center;
   text-decoration: none;
-  font-weight: bold;
-  -webkit-border-radius: 12px;
-  -moz-border-radius: 12px;
-  border-radius: 12px;
-  -moz-box-shadow: 1px 1px 3px #000;
-  -webkit-box-shadow: 1px 1px 3px #000;
-  box-shadow: 1px 1px 3px #000;
+  font-size: 3em;
+  transition: color 0.5s ease;
 }
 
 .close:hover {
-  background: #FF6BB5;
+  color: #CE0059;
 }
 
 
@@ -294,7 +310,7 @@ h2.tax {
 }
 
 .graph.profit {
-  right: 15px;
+  right: 0;
 }
 
 .axis path, .axis line {

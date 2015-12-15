@@ -14,7 +14,7 @@ var app = (function(parent, d3){
       graphWidth = graphRect[0].width;
 
   var binmargin = 0.2,
-      margin = {top: 10, right: 30, bottom: 40, left: 100},
+      margin = {top: 10, right: 20, bottom: 40, left: 100},
       width = graphWidth - margin.left - margin.right,
       height = graphHeight - margin.top - margin.bottom;
 
