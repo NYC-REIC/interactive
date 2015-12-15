@@ -163,8 +163,8 @@ var app = (function(parent, $, L, cartodb) {
 
             // console.log('profit: ', profit, ' tax: ', tax, ' councils: ', el.councils, ' borocodes: ', unique_borocodes);
 
-            $('.profit').text(profit);
-            $('.tax').text(tax);
+            $('.circle .profit').text(profit);
+            $('.circle .tax').text(tax);
         },
 
         // find out our borough codes

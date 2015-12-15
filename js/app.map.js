@@ -28,7 +28,7 @@ var app = (function(parent, $, L, cartodb){
       el.fgTest = L.featureGroup().addTo(el.map);
       app.map.getCartoDB(el.map);
 
-      new L.Control.Zoom({ position: 'bottomright' }).addTo(el.map);    
+      new L.Control.Zoom({ position: 'topright' }).addTo(el.map);    
     },
 
     getCartoDB : function(m) {

@@ -51,9 +51,7 @@ h1, h2, h3, h4, h5, p, div {
   padding: 0;
 }
 
-
 /* nav elements & social icons */
-
 nav {
   position: absolute;
   left: 10px;
@@ -133,6 +131,7 @@ header.ui h1 {
   font-size: 2.2em;
 }
 
+/* map elements */
 #map {
   top: 0;
   left: 0;
@@ -142,6 +141,11 @@ header.ui h1 {
   border: 0;
   margin: 0;
   padding: 0;
+}
+
+.leaflet-top.leaflet-right .leaflet-control {
+  margin-top: 60px;
+  margin-right: 15px;
 }
 
 /* not the svg but the div containing the profit & tax info */
@@ -279,11 +283,18 @@ h2.tax {
 /* D3 histogram stuff */
 .graph {
   bottom: 23px;
-  left: 10px;
   height: 175px;
   width: 375px;
   background: transparent;
   border: none;
+}
+
+.graph.flips {
+  left: 10px;
+}
+
+.graph.profit {
+  right: 15px;
 }
 
 .axis path, .axis line {
