@@ -111,7 +111,7 @@ var app = (function(parent, w, d, $, d3) {
           poffset = -((pwidth - cwidth) / 2) + "px"
 
       if (pwidth > cwidth) {
-        $profit.css('left', poffset);
+        // $profit.css('left', poffset);
       }
 
       // console.log('circle width/radius: ', cwidth);
@@ -125,9 +125,13 @@ var app = (function(parent, w, d, $, d3) {
         $('.total-flips').css("margin-top", "5%");
         $('.total-tax').css("margin-top", "5%");
         $('.hoods:first-of-type').css("margin-top", "4%");
-      } else if (cwidth < 500) {
+      } else if (cwidth < 500 && cwidth > 300) {
         $('.total-flips').css("margin-top", "2%");
         $('.total-tax').css("margin-top", "2%");
+        $('.hoods:first-of-type').css("margin-top", "1%");
+      } else if (cwidth < 300) {
+        $('.total-flips').css("margin-top", "7%");
+        $('.total-tax').css("margin-top", "7%");
         $('.hoods:first-of-type').css("margin-top", "1%");
       }
 

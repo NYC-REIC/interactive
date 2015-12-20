@@ -42,6 +42,7 @@ body {
 
 .container {
   position: relative;
+  overflow: hidden;
 }
 
 h1, h2, h3, h4, h5, p, div {
@@ -114,12 +115,12 @@ ul.icons.social li:last-child {
 .ui {
   z-index: 100;
   position: absolute;
-  background: #fff;
-  border: 2px solid #ddd;
+/*  background: #fff;
+  border: 2px solid #ddd;*/
 }
 
 
-header.ui {
+header {
   top: 10px;
   left: 0;
   right: 0;
@@ -134,7 +135,7 @@ header.ui {
   border-top: none;*/
 }
 
-header.ui h1 {
+header h1 {
   display: inline;
   color: #CE0059;
   font-size: 2em;
@@ -340,4 +341,34 @@ h1.profit {
   .graph {
     visibility: hidden;
   }
+
+  #curve-text {
+    font-size: 1.2em;
+  }
+
+  header {
+    width: 80%;
+  }
+
+  header h1 {
+    font-size: 2em;
+  }
+
+  .total-flips h1, .total-tax h1 {
+    font-size: 3em;
+  }
+
+  .total-flips h3, .total-tax h3 {
+    font-size: 1.2em;
+  }
+
+  .navbar, .social-share {
+    top: initial;
+    bottom: 15px;
+  }
+
+  .leaflet-top.leaflet-right .leaflet-control {
+    display: none;
+  }
+
 }
