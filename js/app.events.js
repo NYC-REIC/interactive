@@ -12,7 +12,7 @@ var app = (function(parent) {
       app.map.props.zoom = el.map.getZoom();
       
       if (app.map.props.zoom > 10 ) {
-        app.circle.getCurCenterTop();
+        app.circle.measureBBox();
         app.circle.queryCDB();
       }
       
@@ -24,7 +24,7 @@ var app = (function(parent) {
     el.map.on('move', function(){
       var zoom = el.map.getZoom();
       if (zoom >10) {
-        app.circle.getCurCenterTop();
+        app.circle.measureBBox();
         app.circle.makeBuffer();
         app.curveText();
       }

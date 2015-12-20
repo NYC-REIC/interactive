@@ -4,8 +4,7 @@ var app = (function(parent){
   parent.init = function() {
     app.splitHash();
     app.map.init();
-    app.circle.getCurCenterTop();
-    app.circle.queryCDB();
+    app.circle.measureBBox();
     app.circle.makeBuffer();
     app.eventListeners();
     app.curveText();

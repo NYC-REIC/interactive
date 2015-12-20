@@ -59,6 +59,7 @@ var app = (function(parent, $, L, cartodb){
           .on('done',function(layer) {
               layer.setZIndex(10); // make sure the cartodb layer is on top
               el.dataLayer = layer.getSubLayer(0);
+              app.circle.queryCDB();  // once the CartoDB layer is loaded, query it using the circle
           });
     },
 

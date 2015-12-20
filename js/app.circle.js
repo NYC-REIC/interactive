@@ -3,13 +3,14 @@ var app = (function(parent, $, L, cartodb) {
     // here we buffer the maps mid point and use that area to query the tax lot data in CartoDB.
 
     var el = parent.el;
+    var queried = false;
 
     parent.circle = {
       
       // find the map's bounding box and center point
-      // make some points for turf.js to calculate distance with
-      getCurCenterTop : function() {
-        // offset the center of the circle so it doesn't collide with the header
+      // make some Leaflet points to calculate distance with
+      measureBBox : function() {
+        // offset the center of the circle so it doesn't collide with the header text
         var curZoom = el.map.getZoom();
         var offset = 0.001;
 
@@ -33,6 +34,7 @@ var app = (function(parent, $, L, cartodb) {
         el.center.lat = el.center.lat - offset;
         el.bounds._northEast.lat = el.bounds._northEast.lat - offset;
         el.topPoint = L.latLng([el.bounds._northEast.lat, el.center.lng]);
+        el.eastPoint = L.latLng([el.center.lat, el.bounds._northEast.lng]);
         el.centerPoint = L.latLng([el.center.lat,el.center.lng]);
       },
       
@@ -51,6 +53,20 @@ var app = (function(parent, $, L, cartodb) {
           pointerEvents: null
         },
 
+        // detect which distance is greater: center to top or center to side of map
+        // to help with making the app mobile friendly
+        widthVsHeight: function() {
+          var distanceX = el.centerPoint.distanceTo(el.eastPoint),
+                distanceY = el.centerPoint.distanceTo(el.topPoint);
+          if (distanceX > distanceY) {
+            console.log('map width greater than height');
+            return distanceY;
+          } else {
+            console.log('map height greater than width')
+            return distanceX;
+          }
+        },
+
         centerToTop : function (c,t) {
           this.center = c;
           this.distance = c.distanceTo(t);
@@ -65,7 +81,8 @@ var app = (function(parent, $, L, cartodb) {
         },
 
         webMercatorCircle : function() {
-          // spatially query the CartoDB data layers using PostGIS, hurrah! 
+          // spatially query the CartoDB data layers using PostGIS, then 
+          // update CartoCSS, aggregate data, make graphs, write to DOM, etc.
           
           if (this.distance && this.center) {
             
@@ -309,6 +326,11 @@ var app = (function(parent, $, L, cartodb) {
           .centerToTop(el.centerPoint, el.topPoint)
           .bufferCenter()
           .testBuffer();
+
+        if (!queried) {
+          console.log('no query yet');
+          queried = true;
+        }
       },
 
       // fires the CartoDB PostGIS queries
