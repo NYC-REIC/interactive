@@ -335,7 +335,7 @@ h1.profit {
 }
 
 /* Media Queries: small screens */
-@media only  screen and (max-device-width: 400px) {
+@media only  screen and (max-device-width: 425px) {
 
   /* hide graphs */
   .graph {
