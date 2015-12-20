@@ -371,4 +371,18 @@ h1.profit {
     display: none;
   }
 
+  .modal > div {
+    position: relative;
+    margin: 0;
+    overflow-y: scroll;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0;
+  }
+
+  .modal > div > p {
+    font-size: 1em;
+    width: 80%;
+  }
+
 }
