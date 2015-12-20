@@ -25,7 +25,7 @@ var app = (function(parent, $, L, cartodb){
       el.map = new L.Map('map', params);
       el.hash = new L.Hash(el.map);
       el.baselayer.addTo(el.map);
-      el.fgTest = L.featureGroup().addTo(el.map);
+      el.layerGroup = L.layerGroup().addTo(el.map);
       app.map.getCartoDB(el.map);
 
       new L.Control.Zoom({ position: 'topright' }).addTo(el.map);    

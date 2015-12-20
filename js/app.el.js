@@ -20,7 +20,7 @@ var app = (function(parent, w, d, $, L, cartodb) {
     sum: null,
     tax: null,
     cartocss : null,
-    fgTest : null,
+    layerGroup : null,
     bounds : null,
     center : null,
     topPoint : null,

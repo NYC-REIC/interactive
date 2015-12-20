@@ -29,6 +29,7 @@ var app = (function(parent, $, L, cartodb) {
           offset = 0.0035;
         }
         
+        // make some L.latLng points for measuring distance with
         el.bounds = el.map.getBounds();
         el.center = el.map.getCenter();
         el.center.lat = el.center.lat - offset;
@@ -38,8 +39,8 @@ var app = (function(parent, $, L, cartodb) {
         el.centerPoint = L.latLng([el.center.lat,el.center.lng]);
       },
       
-      // this object contains chainable functions for creating the circle, 
-      // updating the cartocss & data aggregation
+      // creates the circle UI, 
+      // updates the  cartocss & performs data aggregation for the tax lot data layer
       // to do: could probably separate this out into other objects within app.circle ...
       bufferMaker : {
 
@@ -53,18 +54,21 @@ var app = (function(parent, $, L, cartodb) {
           pointerEvents: null
         },
 
-        // detect which distance is greater: center to top or center to side of map
-        // to help with making the app mobile friendly
-        widthVsHeight: function() {
-          var distanceX = el.centerPoint.distanceTo(el.eastPoint),
-                distanceY = el.centerPoint.distanceTo(el.topPoint);
-          if (distanceX > distanceY) {
+        // detect which distance is greater: width or height of map area
+        // this has to do with helping the app be mobile friendly
+        calcDistance: function() {
+          this.center = el.centerPoint;
+          this.distance = { x : null, y : null };
+          this.distance.x = el.centerPoint.distanceTo(el.eastPoint),
+          this.distance.y = el.centerPoint.distanceTo(el.topPoint);
+          if (this.distance.x > this.distance.y) {
             console.log('map width greater than height');
-            return distanceY;
+            this.distance = this.distance.y;
           } else {
             console.log('map height greater than width')
-            return distanceX;
+            this.distance = this.distance.x;
           }
+          return this;
         },
 
         centerToTop : function (c,t) {
@@ -73,7 +77,7 @@ var app = (function(parent, $, L, cartodb) {
           return this;
         },
 
-        bufferCenter : function () {
+        drawCircleUI : function () {
           if (this.distance && this.center) {
             this.circle = L.circle([el.center.lat, el.center.lng],(this.distance * 0.78), this.circleParams) ;
           }
@@ -262,14 +266,11 @@ var app = (function(parent, $, L, cartodb) {
           if (data.length) {
             var boroughs = "";
             
-            data.forEach(function(el,i,arr){
-              
+            data.forEach(function(el,i,arr){              
               boroughs += app.circle.bufferMaker.getBorough(el);
-              
               if (i<arr.length -1){
                 boroughs += ", ";
               }
-
             });
 
             $('h4.hoods.list').html(boroughs);
@@ -312,10 +313,10 @@ var app = (function(parent, $, L, cartodb) {
 
         // clear the current L.circle then draw the new one
         // this makes it appear as if the circle is always staying in the center of the screen
-        testBuffer : function () {
+        resetLayerGroup : function () {
           if (this.distance) {
-            el.fgTest.clearLayers();
-            el.fgTest.addLayer(this.circle);
+            el.layerGroup.clearLayers();
+            el.layerGroup.addLayer(this.circle);
           }
         }
       }, // end bufferMaker
@@ -323,9 +324,9 @@ var app = (function(parent, $, L, cartodb) {
       // draws the circle UI
       makeBuffer : function() {
         app.circle.bufferMaker
-          .centerToTop(el.centerPoint, el.topPoint)
-          .bufferCenter()
-          .testBuffer();
+          .calcDistance()
+          .drawCircleUI()
+          .resetLayerGroup();
 
         if (!queried) {
           console.log('no query yet');

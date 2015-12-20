@@ -160,6 +160,7 @@ header.ui h1 {
 /* not the svg but the div containing the profit & tax info */
 .circle {
   display: none;
+  z-index: 110;
   pointer-events: none;
   border: 0;
   top: 0;
@@ -212,6 +213,8 @@ h2.tax {
 
 .hoods.list, .date-range {
   font-weight: normal;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 .hoods:first-of-type {

@@ -139,12 +139,12 @@ var app = (function(parent, d3){
 
       // x-axis & labels
       graph.svg.append("g")
-        .attr("class", "x axis " + graph.key)
+        .attr("class", "x axis text-shadow " + graph.key)
         .attr("transform", "translate(0," + height + ")")
         .call(graph.xAxis);
 
       graph.svg.append("text")
-        .attr("class", "xlabel")
+        .attr("class", "xlabel text-shadow")
         .attr("text-anchor", "middle")
         .attr("x", width / 2)
         .attr("y", height + margin.bottom -5)
@@ -152,12 +152,12 @@ var app = (function(parent, d3){
 
       // y-axis & labels
       graph.svg.append("g")
-        .attr("class", "y axis " + graph.key)
+        .attr("class", "y axis text-shadow " + graph.key)
         .attr("transform", "translate(0,0)")
         .call(graph.yAxis);
 
       graph.svg.append("text")
-        .attr("class", "ylabel")
+        .attr("class", "ylabel text-shadow")
         .attr("y", 0 - graph.marginLeft)
         .attr("x", 0 - (height/2))
         .attr("dy", "1em")
