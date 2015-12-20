@@ -130,7 +130,7 @@ var app = (function(parent, $, L, cartodb) {
               .done(function(data){
                 el.dataStore = data.rows.slice();
                 app.circle.bufferMaker.crunchData(data);
-                app.circleElems();
+                app.ui.circleElems();
                 app.graph.main(el.dataStore);
                 this.data = data;
                 return this;
@@ -146,7 +146,7 @@ var app = (function(parent, $, L, cartodb) {
               })
                 .done(function(data){
                   // console.log('hoods: ', data);
-                  app.circle.bufferMaker.writeHoods(data);
+                  app.ui.writeHoods(data);
                 });
             }
 
@@ -231,84 +231,7 @@ var app = (function(parent, $, L, cartodb) {
           // console.log('toWrite: ', toWrite);
 
           // write our final borocodes to the DOM!
-          app.circle.bufferMaker.writeBoroughs(toWrite);
-        },
-
-        // helper fn to translate borough code to corresponding string
-        // originally wrote this because I was dealing with numeric codes
-        // probably is no longer necessary
-        getBorough : function(x) {
-          var borough;
-
-          switch(x) {
-            case ("mn"):
-              borough = "Manhattan";
-              break;
-            case ("bx"):
-              borough = "Bronx";
-              break;
-            case ("bk"):
-              borough = "Brooklyn";
-              break;
-            case ("qn"):
-              borough = "Queens";
-              break;
-            default:
-              borough = "";
-          }
-
-          return borough;
-        },
-
-        // write borough names to the UI
-        writeBoroughs : function(data) {
-
-          if (data.length) {
-            var boroughs = "";
-            
-            data.forEach(function(el,i,arr){              
-              boroughs += app.circle.bufferMaker.getBorough(el);
-              if (i<arr.length -1){
-                boroughs += ", ";
-              }
-            });
-
-            $('h4.hoods.list').html(boroughs);
-            $('h4.hoods').css("display","block");
-
-          } else {
-            app.circle.bufferMaker.clearHoods();
-          }
-
-        },
-
-        // helper function to write neighborhoods to the map
-        writeHoods : function(data) {
-          var hoodNames = "";
-          el.hoods = data.rows.slice();
-
-          if (el.hoods.length) {
-
-            el.hoods.forEach(function(d,i,arr){
-              if (i === arr.length -1) {
-                hoodNames += d.neighborhood;
-              } else {
-                hoodNames += d.neighborhood + ", "  
-              }
-            });
-
-            $('h4.hoods.list').html(hoodNames);
-            $('h4.hoods').css("display","block");
-          
-          } else {
-            app.circle.bufferMaker.clearHoods();
-          }
-
-        },
-
-        clearHoods : function() {
-            $('h4.hoods.list').html("");
-            $('h4.hoods').css("display","none");
+          app.ui.writeBoroughs(toWrite);
         },
 
         // clear the current L.circle then draw the new one

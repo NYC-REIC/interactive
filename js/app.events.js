@@ -26,7 +26,7 @@ var app = (function(parent) {
       if (zoom >10) {
         app.circle.measureBBox();
         app.circle.makeBuffer();
-        app.curveText();
+        app.ui.curveText();
       }
     });
 

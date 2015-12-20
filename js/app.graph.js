@@ -46,6 +46,11 @@ var app = (function(parent, d3){
 
     main : function(data) {
 
+      // tmp fix to prevent graph from running on mobile devices
+      if (window.innerWidth < 400) {
+        return;
+      }
+
       if (a.made && b.made) {
         app.graph.updateGraph(data, a);
         app.graph.updateGraph(data, b);

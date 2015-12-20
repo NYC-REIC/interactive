@@ -137,7 +137,7 @@ header.ui {
 header.ui h1 {
   display: inline;
   color: #CE0059;
-  font-size: 2.2em;
+  font-size: 2em;
 }
 
 /* map elements */
@@ -175,16 +175,17 @@ header.ui h1 {
   margin-top: 6%;
 }
 
-h1.profit {
+h1.profit, h1.tax {
   position: relative;
-  color: #CE0059;
   font-size: 7em;
 }
 
-h2.tax {
-  position: relative;
+h1.tax {
   color: #FF6BB5;
-  font-size: 6em;
+}
+
+h1.profit {
+  color: #CE0059;
 }
 
 .total-flips h4, 
@@ -195,7 +196,7 @@ h2.tax {
 .total-flips h3,
 .total-tax h3 {
   font-size: 2em;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
 }
 
 .total-flips {
@@ -330,4 +331,13 @@ h2.tax {
 .graph text {
   font-size: 13px;
   fill: #333;
+}
+
+/* Media Queries: small screens */
+@media only  screen and (max-device-width: 400px) {
+
+  /* hide graphs */
+  .graph {
+    visibility: hidden;
+  }
 }

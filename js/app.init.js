@@ -7,8 +7,8 @@ var app = (function(parent){
     app.circle.measureBBox();
     app.circle.makeBuffer();
     app.eventListeners();
-    app.curveText();
-    app.circleElems();
+    app.ui.curveText();
+    app.ui.circleElems();
   }
 
   return parent;
