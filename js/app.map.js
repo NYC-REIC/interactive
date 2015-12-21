@@ -13,7 +13,7 @@ var app = (function(parent, $, L, cartodb){
         zoom : 14, 
         zoomControl : false,
         infoControl: false,
-        attributionControl: true
+        attributionControl: false
       };
 
       el.baselayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',{

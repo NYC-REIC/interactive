@@ -3,7 +3,6 @@ var app = (function(parent, $, L, cartodb) {
     // here we buffer the maps mid point and use that area to query the tax lot data in CartoDB.
 
     var el = parent.el;
-    var queried = false;
 
     parent.circle = {
       
@@ -62,10 +61,10 @@ var app = (function(parent, $, L, cartodb) {
           this.distance.x = el.centerPoint.distanceTo(el.eastPoint),
           this.distance.y = el.centerPoint.distanceTo(el.topPoint);
           if (this.distance.x > this.distance.y) {
-            console.log('map width greater than height');
+            // console.log('map width greater than height');
             this.distance = this.distance.y;
           } else {
-            console.log('map height greater than width')
+            // console.log('map height greater than width')
             this.distance = this.distance.x;
           }
           return this;
@@ -250,11 +249,6 @@ var app = (function(parent, $, L, cartodb) {
           .calcDistance()
           .drawCircleUI()
           .resetLayerGroup();
-
-        if (!queried) {
-          console.log('no query yet');
-          queried = true;
-        }
       },
 
       // fires the CartoDB PostGIS queries

@@ -14,6 +14,7 @@ var app = (function(parent) {
       if (app.map.props.zoom > 10 ) {
         app.circle.measureBBox();
         app.circle.queryCDB();
+        app.ui.curveText();
       }
       
     });

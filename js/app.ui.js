@@ -72,7 +72,7 @@ var app = (function(parent, w, d, $, d3) {
         $('.hoods').css("display","block");
       
       } else {
-        app.circle.bufferMaker.clearHoods();
+        app.ui.clearHoods();
       }
 
     },
@@ -91,23 +91,15 @@ var app = (function(parent, w, d, $, d3) {
           cwidth = Math.round(circle.node().getBoundingClientRect().width),
           cheight = Math.round(circle.node().getBoundingClientRect().height);
 
-      el.cradius = Math.round((cwidth + cheight) / 2);
+      el.cDiameter = Math.round((cwidth + cheight) / 2);
 
       var width = w.innerWidth,
           height = w.innerHeight,
           left = (width - cwidth)/2,
           top = ctop;
 
-      $('.circle').css({
-        "top" : top,
-        "left" : left,
-        "width" : cwidth,
-        "height" : cheight,
-        "display" : "block"
-      });
-
       var $profit = $('h1.profit'),
-          pwidth = $profit.text().length * 52.6,
+          pwidth = $profit.text().length * 20.8, //52.6,
           poffset = -((pwidth - cwidth) / 2) + "px"
 
       if (pwidth > cwidth) {
@@ -123,7 +115,7 @@ var app = (function(parent, w, d, $, d3) {
         $('.hoods:first-of-type').css("margin-top", "4%");
       } else if (cwidth >=500 && cwidth < 700) {
         $('.total-flips').css("margin-top", "5%");
-        $('.total-tax').css("margin-top", "5%");
+        $('.total-tax').css("margin-top", "1%");
         $('.hoods:first-of-type').css("margin-top", "4%");
       } else if (cwidth < 500 && cwidth > 425) {
         $('.total-flips').css("margin-top", "2%");
@@ -131,14 +123,27 @@ var app = (function(parent, w, d, $, d3) {
         $('.hoods:first-of-type').css("margin-top", "1%");
       } else if (cwidth <= 425) {
         $('.total-flips').css("margin-top", "7%");
-        $('.total-tax').css("margin-top", "7%");
+        $('.total-tax').css("margin-top", "2%");
         $('.hoods:first-of-type').css("margin-top", "1%");
       }
 
+      $('.circle').css({
+        "top" : top,
+        "left" : left,
+        "width" : cwidth,
+        "height" : cheight,
+        "display" : "block"
+      });
+
       // change the size of the modal
       var $modal = $('#open-modal > div');
-      $modal.width(el.cradius);
-      $modal.height(el.cradius); 
+      $modal.width(el.cDiameter);
+      $modal.height(el.cDiameter);
+      $modal.css('top', top);
+
+      if (cwidth <= 425) {
+        $modal.css('top', 'initial');        
+      }
     },
 
     curveText : function() {
@@ -165,13 +170,18 @@ var app = (function(parent, w, d, $, d3) {
           text = d3.select('#curve-text'),
           pathLength = textPath.node().getTotalLength(),
           textLength = text.node().getComputedTextLength(),
+          width = d3.select('.leafletCircle').node().getBoundingClientRect().width,
           xoffset;
 
-      if ( d3.select('.leafletCircle').node().getBoundingClientRect().width < 500) {
+      if (width < 500 && width >= 290) {
         xoffset = ((pathLength / 4) * 3) + textLength;
+      } else if (width < 290) {  
+        xoffset = ((pathLength / 4) * 2.7) + textLength;
       } else {
         xoffset = ((pathLength / 4) * 3.1) + textLength;
       }
+
+      console.log(width, xoffset)
 
       text.attr('x', xoffset);
       text.attr('dy', -10);
